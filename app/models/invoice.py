@@ -20,8 +20,9 @@ class Invoice(BaseModel):
     
     @property
     def total_amount(self) -> float:
-        return sum(item.quantity * item.unit_price * (1 + item.tax_rate) for item in self.items)
-    
+        # return sum(item.quantity * item.unit_price * (1 + item.tax_rate) for item in self.items)
+        return sum(item.quantity * item.unit_price for item in self.items)
+
     @property
     def tax_amount(self) -> float:
         return sum(item.quantity * item.unit_price * item.tax_rate for item in self.items) 

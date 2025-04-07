@@ -3,14 +3,26 @@ import logging
 from datetime import datetime
 from app.services.tusfacturas_service import TusFacturasService
 from app.models.invoice import Invoice, InvoiceItem
+from dotenv import load_dotenv
+import os
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Load environment variables
+load_dotenv()
+
 @pytest.fixture
 def tusfacturas_service():
     """Fixture to create a TusFacturasService instance"""
+    # Ensure environment variables are loaded
+    if not all([
+        os.getenv("TUSFACTURAS_API_KEY"),
+        os.getenv("TUSFACTURAS_API_TOKEN"),
+        os.getenv("TUSFACTURAS_USER_TOKEN")
+    ]):
+        raise ValueError("Missing required TusFacturasApp credentials in environment variables")
     return TusFacturasService()
 
 @pytest.fixture
@@ -18,7 +30,7 @@ def sample_invoice():
     """Fixture to create a sample invoice for testing"""
     return Invoice(
         customer_name="Test Company S.A.",
-        customer_tax_id="30712345678",
+        customer_tax_id="20403942031",
         customer_address="Av. Test 123, CABA",
         items=[
             InvoiceItem(
@@ -35,7 +47,7 @@ def sample_invoice():
             )
         ],
         invoice_date=datetime.now(),
-        invoice_type="A",
+        invoice_type="FACTURA C",
         payment_method="Transfer",
         currency="ARS"
     )
@@ -73,8 +85,8 @@ async def test_generate_invoice(tusfacturas_service, sample_invoice):
         assert response["cae"] is not None, "CAE should not be None"
         assert response["cae_vto"] is not None, "CAE expiration date should not be None"
         assert response["total"] is not None, "Total amount should not be None"
-        assert response["tipo"] == "FACTURA A", "Invoice type should match request"
-        assert response["punto_venta"] == "1", "Point of sale should match request"
+        assert response["tipo"] == "FACTURA C", "Invoice type should match request"
+        assert response["punto_venta"] == "00001", "Point of sale should match request"
 
         print("\nInvoice generated successfully!")
         print(f"Invoice number: {response['invoice_number']}")

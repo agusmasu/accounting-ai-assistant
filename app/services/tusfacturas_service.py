@@ -2,7 +2,7 @@ import os
 import logging
 from typing import Dict, Any, List
 import aiohttp
-from datetime import datetime
+from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from app.models.invoice import Invoice, InvoiceItem
 
@@ -29,59 +29,86 @@ class TusFacturasService:
         logger.info(f"User Token: {self.user_token}")
 
     def _prepare_items(self, items: List[InvoiceItem]) -> List[Dict[str, Any]]:
-        """Format invoice items according to TusFacturasApp specifications"""
-        formatted_items = [
-            {
-                "descripcion": item.description,
+        """Prepare invoice items in TusFacturasApp format"""
+        formatted_items = []
+        for item in items:
+            formatted_item = {
                 "cantidad": str(item.quantity),
-                "precio_unitario": str(item.unit_price),
-                "alicuota": str(int(item.tax_rate * 100)),  # Convert decimal to percentage
-                "unidad_medida": "7",  # Units
                 "producto": {
                     "descripcion": item.description,
-                    "codigo": "001",  # Default product code
-                    "precio_unitario_sin_iva": str(item.unit_price)
-                }
+                    "unidad_bulto": "1",
+                    "lista_precios": "Lista de precios API 3",
+                    "codigo": "001",
+                    "precio_unitario_sin_iva": str(item.unit_price),
+                    "alicuota": "0"  # 0% for Factura C
+                },
+                "leyenda": ""
             }
-            for item in items
-        ]
-        logger.info(f"Formatted items: {formatted_items}")
+            formatted_items.append(formatted_item)
         return formatted_items
 
     async def generate_invoice(self, invoice: Invoice) -> Dict[str, Any]:
         """Generate an invoice using TusFacturasApp API"""
         try:
+            # Reload environment variables to ensure we have the latest values
+            load_dotenv()
+            self.api_key = os.getenv("TUSFACTURAS_API_KEY")
+            self.api_token = os.getenv("TUSFACTURAS_API_TOKEN")
+            self.user_token = os.getenv("TUSFACTURAS_USER_TOKEN")
+
+            if not all([self.api_key, self.api_token, self.user_token]):
+                raise ValueError("Missing required TusFacturasApp credentials in environment variables")
+
+            # Calculate expiration date (30 days from invoice date)
+            expiration_date = invoice.invoice_date + timedelta(days=30)
+
             # Prepare invoice data according to TusFacturasApp format
             invoice_data = {
                 "usertoken": self.user_token,
-                "apitoken": self.api_token,
                 "apikey": self.api_key,
+                "apitoken": self.api_token,
                 "cliente": {
-                    "documento_tipo": "CUIT",  # CUIT
+                    "documento_tipo": "CUIT",
                     "documento_nro": invoice.customer_tax_id,
                     "razon_social": invoice.customer_name,
-                    "email": "cliente@test.com",  # Required field
+                    "email": "cliente@test.com",
                     "domicilio": invoice.customer_address,
-                    "condicion_iva": "RI",  # Responsable Inscripto
-                    "condicion_pago": "Contado",  # Contado
-                    "provincia": "1"  # Buenos Aires
+                    "provincia": "1",
+                    "reclama_deuda": "N",
+                    "envia_por_mail": "S",
+                    "condicion_pago": "Contado",
+                    "condicion_iva": "RI",
+                    "condicion_iva_operacion": "RI"
                 },
                 "comprobante": {
                     "fecha": invoice.invoice_date.strftime("%d/%m/%Y"),
-                    "tipo": "FACTURA A",
-                    "operacion": "V",  # Venta
-                    "punto_venta": "1",
-                    "numero": "0",  # Will be assigned by the API
-                    "periodo_facturado": {
-                        "fecha_desde": invoice.invoice_date.strftime("%d/%m/%Y"),
-                        "fecha_hasta": invoice.invoice_date.strftime("%d/%m/%Y")
+                    "vencimiento": expiration_date.strftime("%d/%m/%Y"),
+                    "tipo": invoice.invoice_type,
+                    "external_reference": f"{invoice.invoice_date.strftime('%m%y')}-{invoice.invoice_date.strftime('%m%y')}",
+                    "tags": ["FacturAI"],
+                    "datos_informativos": {
+                        "paga_misma_moneda": "N"
                     },
+                    "operacion": "V",
+                    "punto_venta": "0001",
+                    "moneda": invoice.currency,
+                    "cotizacion": 1,
+                    "periodo_facturado_desde": invoice.invoice_date.strftime("%d/%m/%Y"),
+                    "periodo_facturado_hasta": invoice.invoice_date.strftime("%d/%m/%Y"),
                     "rubro": "Servicios",
                     "rubro_grupo_contable": "Servicios",
                     "detalle": self._prepare_items(invoice.items),
-                    "moneda": {
-                        "codigo": invoice.currency,
-                        "cotizacion": "1"
+                    "bonificacion": "0.00",
+                    "leyenda_gral": " ",
+                    "total": str(invoice.total_amount),
+                    "pagos": {
+                        "formas_pago": [
+                            {
+                                "descripcion": invoice.payment_method,
+                                "importe": invoice.total_amount
+                            }
+                        ],
+                        "total": invoice.total_amount
                     }
                 }
             }
@@ -119,41 +146,31 @@ class TusFacturasService:
 
                         # Handle API error responses
                         if isinstance(result, dict):
-                            if result.get("error_response") == "S":
-                                error_msg = result.get("error_msg", "Error desconocido")
+                            if result.get("error") == "S":
+                                # Format error messages from error_details if available
+                                error_messages = []
+                                if result.get("error_details"):
+                                    error_messages.extend([detail["text"] for detail in result["error_details"]])
+                                if result.get("errores"):
+                                    error_messages.extend(result["errores"])
+                                
+                                error_msg = " | ".join(error_messages) if error_messages else "Error desconocido"
                                 raise Exception(f"TusFacturasApp error: {error_msg}")
-                            elif result.get("error_response") == "N":
-                                comprobante = result.get("comprobante", {})
+                            elif result.get("error") == "N":
                                 return {
-                                    "invoice_number": comprobante.get("numero"),
+                                    "invoice_number": result.get("comprobante_nro"),
                                     "status": "success",
-                                    "pdf_url": result.get("pdf_url"),
+                                    "pdf_url": result.get("comprobante_pdf_url"),
                                     "cae": result.get("cae"),
-                                    "cae_vto": result.get("cae_vto"),
-                                    "total": comprobante.get("total"),
-                                    "tipo": comprobante.get("tipo"),
-                                    "punto_venta": comprobante.get("punto_venta")
+                                    "cae_vto": result.get("vencimiento_cae"),
+                                    "total": invoice.total_amount,
+                                    "tipo": result.get("comprobante_tipo"),
+                                    "punto_venta": result.get("comprobante_nro", "").split("-")[0],
+                                    "external_reference": result.get("external_reference"),
+                                    "observaciones": result.get("observaciones"),
+                                    "afip_qr": result.get("afip_qr"),
+                                    "afip_codigo_barras": result.get("afip_codigo_barras")
                                 }
-
-                        # Handle list responses
-                        if isinstance(result, list) and len(result) > 0:
-                            first_result = result[0]
-                            if isinstance(first_result, dict):
-                                if first_result.get("error_response") == "S":
-                                    error_msg = first_result.get("error_msg", "Error desconocido")
-                                    raise Exception(f"TusFacturasApp error: {error_msg}")
-                                elif first_result.get("error_response") == "N":
-                                    comprobante = first_result.get("comprobante", {})
-                                    return {
-                                        "invoice_number": comprobante.get("numero"),
-                                        "status": "success",
-                                        "pdf_url": first_result.get("pdf_url"),
-                                        "cae": first_result.get("cae"),
-                                        "cae_vto": first_result.get("cae_vto"),
-                                        "total": comprobante.get("total"),
-                                        "tipo": comprobante.get("tipo"),
-                                        "punto_venta": comprobante.get("punto_venta")
-                                    }
 
                         raise Exception(f"TusFacturasApp error: Formato de respuesta inesperado - {result}")
 

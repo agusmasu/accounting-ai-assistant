@@ -1,0 +1,113 @@
+openapi: 3.0.0
+info:
+  title: TusFacturasAPP - API Facturación AFIP/ARCA
+  description: API para generar comprobantes electrónicos AFIP/ARCA
+  version: "1.0.0"
+servers:
+  - url: https://www.tusfacturas.app/app/api/v2
+
+paths:
+  /facturacion/nuevo:
+    post:
+      summary: Crear comprobante (Factura A, B, E, etc.)
+      description: Permite crear diferentes tipos de comprobantes de forma instantánea
+      operationId: crearComprobante
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ComprobanteRequest'
+      responses:
+        '200':
+          description: Comprobante creado correctamente
+          content:
+            application/json:
+              schema:
+                type: object
+
+components:
+  schemas:
+    ComprobanteRequest:
+      type: object
+      properties:
+        usertoken:
+          type: string
+        apikey:
+          type: string
+        apitoken:
+          type: string
+        cliente:
+          $ref: '#/components/schemas/Cliente'
+        comprobante:
+          $ref: '#/components/schemas/Comprobante'
+
+    Cliente:
+      type: object
+      properties:
+        documento_tipo:
+          type: string
+          enum: [CUIT, DNI, OTRO]
+        documento_nro:
+          type: string
+        razon_social:
+          type: string
+        email:
+          type: string
+        domicilio:
+          type: string
+        provincia:
+          type: string
+        envia_por_mail:
+          type: string
+          enum: [S, N]
+        reclama_deuda:
+          type: string
+          enum: [S, N]
+        condicion_pago:
+          type: string
+        condicion_iva:
+          type: string
+          enum: [RI, CF, CDEX]
+        condicion_iva_operacion:
+          type: string
+          enum: [RI, CF]
+
+    Comprobante:
+      type: object
+      properties:
+        fecha:
+          type: string
+          format: date
+        tipo:
+          type: string
+          enum: [FACTURA A, FACTURA B, FACTURA E]
+        moneda:
+          type: string
+          enum: [PES, USD]
+        detalle:
+          type: array
+          items:
+            $ref: '#/components/schemas/DetalleItem'
+        total:
+          type: string
+
+    DetalleItem:
+      type: object
+      properties:
+        cantidad:
+          type: string
+        leyenda:
+          type: string
+        producto:
+          $ref: '#/components/schemas/Producto'
+
+    Producto:
+      type: object
+      properties:
+        descripcion:
+          type: string
+        precio_unitario_sin_iva:
+          type: number
+        alicuota:
+          type: number

@@ -93,9 +93,9 @@ class InvoiceInputData(BaseModel):
     customer_email: Optional[str] = None # Redundant? email field exists. Consider removing.
 
     invoice_date: datetime = Field(default_factory=datetime.now)
-    invoice_type: InvoiceType = InvoiceType.A # May be needed for API call structure, check tusfacturas_service
-    payment_method: PaymentMethod = PaymentMethod.TRANSFER # May be needed internally, but API uses condicion_pago code. Review usage.
-    currency: Currency = Currency.ARS # May be needed for API call structure, check tusfacturas_service
+    invoice_type: InvoiceType = Field(description="Tipo de factura.") # May be needed for API call structure, check tusfacturas_service
+    payment_method: PaymentMethod = Field(description="Método de pago.") # May be needed internally, but API uses condicion_pago code. Review usage.
+    currency: Currency = Field(default=Currency.ARS, description="Moneda de la factura.") # May be needed for API call structure, check tusfacturas_service
 
     # --- Properties (Recalculate based on items) ---
     @property

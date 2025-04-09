@@ -45,7 +45,7 @@ class AIService:
         
         # Initialize LLM
         self.llm = ChatOpenAI(
-            model="gpt-4o",
+            model="gpt-4o-mini",
             temperature=0,
             openai_api_key=self.openai_api_key
         )

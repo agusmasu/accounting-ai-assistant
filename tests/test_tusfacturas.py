@@ -2,7 +2,7 @@ import pytest
 import logging
 from datetime import datetime
 from app.services.tusfacturas_service import TusFacturasService
-from app.models.invoice import Invoice, InvoiceItem
+from app.models.invoice import InvoiceInputData, InvoiceItem
 from dotenv import load_dotenv
 import os
 
@@ -28,7 +28,7 @@ def tusfacturas_service():
 @pytest.fixture
 def sample_invoice():
     """Fixture to create a sample invoice for testing"""
-    return Invoice(
+    return InvoiceInputData(
         customer_name="Test Company S.A.",
         customer_tax_id="20403942031",
         customer_address="Av. Test 123, CABA",
@@ -106,7 +106,7 @@ async def test_invalid_invoice(tusfacturas_service):
     """Test invoice generation with invalid data"""
     try:
         # Create invalid invoice (missing required fields)
-        invalid_invoice = Invoice(
+        invalid_invoice = InvoiceInputData(
             customer_name="",  # Empty name
             customer_tax_id="",  # Empty tax ID
             customer_address="",  # Empty address

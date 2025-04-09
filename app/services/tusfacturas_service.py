@@ -4,7 +4,7 @@ from typing import Dict, Any, List
 import aiohttp
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
-from app.models.invoice import Invoice, InvoiceItem
+from app.models.invoice import InvoiceInputData, InvoiceItem
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -37,7 +37,7 @@ class TusFacturasService:
                 "producto": {
                     "descripcion": item.description,
                     "unidad_bulto": "1",
-                    "lista_precios": "Lista de precios API 3",
+                    # "lista_precios": "Lista de precios API 3",
                     "codigo": "001",
                     "precio_unitario_sin_iva": str(item.unit_price),
                     "alicuota": "0"  # 0% for Factura C
@@ -47,7 +47,7 @@ class TusFacturasService:
             formatted_items.append(formatted_item)
         return formatted_items
 
-    async def generate_invoice(self, invoice: Invoice) -> Dict[str, Any]:
+    async def generate_invoice(self, invoice: InvoiceInputData) -> Dict[str, Any]:
         """Generate an invoice using TusFacturasApp API"""
         try:
             # Reload environment variables to ensure we have the latest values
@@ -68,17 +68,17 @@ class TusFacturasService:
                 "apikey": self.api_key,
                 "apitoken": self.api_token,
                 "cliente": {
-                    "documento_tipo": "CUIT",
+                    "documento_tipo": invoice.documento_tipo,
                     "documento_nro": invoice.customer_tax_id,
                     "razon_social": invoice.customer_name,
-                    "email": "cliente@test.com",
+                    "email": invoice.customer_email,
                     "domicilio": invoice.customer_address,
                     "provincia": "1",
                     "reclama_deuda": "N",
-                    "envia_por_mail": "S",
+                    "envia_por_mail": "N",
                     "condicion_pago": "Contado",
-                    "condicion_iva": "RI",
-                    "condicion_iva_operacion": "RI"
+                    "condicion_iva": invoice.condicion_iva,
+                    "condicion_iva_operacion": invoice.condicion_iva_operacion
                 },
                 "comprobante": {
                     "fecha": invoice.invoice_date.strftime("%d/%m/%Y"),
@@ -130,7 +130,6 @@ class TusFacturasService:
                 ) as response:
                     response_text = await response.text()
                     logger.info(f"TusFacturasApp API response status: {response.status}")
-                    logger.info(f"TusFacturasApp API response headers: {response.headers}")
                     logger.info(f"TusFacturasApp API response body: {response_text}")
 
                     try:

@@ -61,6 +61,14 @@ class AIService:
             You can also help with other accounting tasks.
             You can use any of the tools provided to you to help the user.
 
+            Please consider the following rules for creating an invoice:
+            - The invoice must be created in the format of the tool provided.
+            - If the user decides to not specify a client, you must use the following values:
+                - documento_tipo: OTRO
+                - documento_nro: 0
+                - razon_social: "Sin Especificar"
+                - domicilio: "Sin Especificar"
+                - provincia: 0    
         """        
 
         # Create the agent
@@ -69,7 +77,7 @@ class AIService:
             self.tools, 
             checkpointer=self.memory,
             prompt=prompt,
-            debug=True
+            debug=False
         )
     
     async def process_text(self, text: str, thread_id: str = None) -> Dict[str, Any]:

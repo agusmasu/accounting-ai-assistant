@@ -5,7 +5,7 @@ import os
 from .services.whatsapp_service import WhatsAppService
 from .services.ai_service import AIService
 from .services.tusfacturas_service import TusFacturasService
-from .models.invoice import Invoice
+from .models.invoice import InvoiceInputData
 
 # Load environment variables
 load_dotenv()
@@ -49,7 +49,7 @@ async def whatsapp_webhook(request: Request):
             invoice_data = await ai_service.process_voice(voice_file)
             
             # Generate invoice using TusFacturasApp
-            invoice = Invoice(**invoice_data)
+            invoice = InvoiceInputData(**invoice_data)
             invoice_response = await tusfacturas_service.generate_invoice(invoice)
             
             # Send confirmation message with PDF link

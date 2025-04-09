@@ -2,7 +2,7 @@ import os
 from zeep import Client
 from zeep.transports import Transport
 from zeep.exceptions import Fault
-from ..models.invoice import Invoice
+from ..models.invoice import InvoiceInputData
 from datetime import datetime
 import logging
 
@@ -52,7 +52,7 @@ class AFIPService:
             self.logger.error(f"Failed to initialize AFIP client: {str(e)}")
             raise
     
-    async def generate_invoice(self, invoice: Invoice) -> dict:
+    async def generate_invoice(self, invoice: InvoiceInputData) -> dict:
         """Generate an invoice using AFIP web service"""
         try:
             # Prepare invoice data

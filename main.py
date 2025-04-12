@@ -1,15 +1,18 @@
+import os
+import json
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
-import os
-from .services.whatsapp_service import WhatsAppService
-from .services.ai_service import AIService
-from .services.tusfacturas_service import TusFacturasService
-from .models.invoice import InvoiceInputData
+import functions_framework
+from app.services.whatsapp_service import WhatsAppService
+from app.services.ai_service import AIService
+from app.services.tusfacturas_service import TusFacturasService
+from app.models.invoice import InvoiceInputData
 
 # Load environment variables
 load_dotenv()
 
+# Initialize FastAPI app
 app = FastAPI(title="FacturAI API")
 
 # Configure CORS
@@ -117,4 +120,21 @@ async def verify_webhook(request: Request):
     """
     Verify WhatsApp webhook
     """
-    return whatsapp_service.handle_verification(request) 
+    return whatsapp_service.handle_verification(request)
+
+# Cloud Functions entry point
+@functions_framework.http
+def whatsapp_webhook_function(request):
+    """
+    Cloud Functions entry point for WhatsApp webhook
+    """
+    # Convert the request to a FastAPI request
+    fastapi_request = Request(scope=request.environ)
+    
+    # Handle the request based on the method
+    if request.method == "GET":
+        return verify_webhook(fastapi_request)
+    elif request.method == "POST":
+        return whatsapp_webhook(fastapi_request)
+    else:
+        return {"status": "error", "message": "Method not allowed"} 

@@ -52,20 +52,80 @@ TUSFACTURAS_API_KEY=your_tusfacturas_api_key
 
 ## Usage
 
-1. Start the application:
+### Running the FastAPI Server
+
+Start the application with Uvicorn:
 ```bash
 uvicorn app.main:app --reload
 ```
 
-2. Configure your WhatsApp webhook to point to your server's `/webhook/whatsapp` endpoint.
+This runs the server at http://localhost:8000
 
-3. Send a voice message to your WhatsApp number with the invoice details.
+### Running the Console Chat Interface
 
-4. The bot will:
+Run the interactive console chat interface:
+```bash
+python -m app.console_chat
+```
+
+This provides a terminal-based interface to interact with the AI assistant.
+
+### Running in Google Cloud Functions Emulator
+
+Run the application using the Functions Framework emulator:
+```bash
+functions-framework --target=http_function --source=main_functions.py --debug
+```
+
+This runs the server at http://localhost:8080
+
+### API Endpoints
+
+1. Configure your WhatsApp webhook to point to your server's `/webhook/whatsapp` endpoint.
+
+2. Send a voice message to your WhatsApp number with the invoice details.
+
+3. The bot will:
    - Process the voice message
    - Extract invoice information
    - Generate an invoice through TusFacturasApp
    - Send back the invoice details and PDF link
+
+4. Use the Chat API at `/chat/send` for direct text interaction with the AI assistant.
+
+## Deployment
+
+### Deploying to Google Cloud Functions
+
+1. Edit `deploy_functions.sh` and update the `PROJECT_ID` with your Google Cloud project ID:
+   ```bash
+   PROJECT_ID="your-project-id"  # Replace with your Google Cloud project ID
+   ```
+
+2. Make sure you're authenticated with Google Cloud:
+   ```bash
+   gcloud auth login
+   ```
+
+3. Run the deployment script:
+   ```bash
+   ./deploy_functions.sh
+   ```
+
+4. The script will:
+   - Deploy the function to Google Cloud
+   - Set up environment variables from your .env file
+   - Display the function URL after deployment
+   - Show the endpoints for WhatsApp webhook and Chat API
+
+### Configuration Options
+
+The deployment script provides several configuration options:
+- `REGION`: The Google Cloud region (default: us-central1)
+- `MEMORY`: Memory allocation (default: 512MB)
+- `TIMEOUT`: Function timeout (default: 300s / 5 minutes)
+- `MIN_INSTANCES`: Minimum instances (default: 0)
+- `MAX_INSTANCES`: Maximum instances (default: 5)
 
 ## Development
 
@@ -94,15 +154,22 @@ mypy .
 ```
 facturai/
 ├── app/
+│   ├── api/                 # API endpoints
+│   │   ├── endpoints/       # API route handlers
+│   │   └── router.py        # Main API router
 │   ├── main.py              # FastAPI application
+│   ├── console_chat.py      # Console chat interface
 │   ├── models/              # Data models
 │   └── services/            # Business logic
 │       ├── ai_service.py    # AI processing
 │       ├── whatsapp_service.py  # WhatsApp integration
 │       └── tusfacturas_service.py  # Invoice generation
+├── main_functions.py        # Cloud Functions entry point
+├── deploy_functions.sh      # Cloud Functions deployment script
 ├── tests/                   # Test files
 ├── requirements.txt         # Project dependencies
-└── README.md               # This file
+├── .gcloudignore            # Files to ignore in Cloud deployment
+└── README.md                # This file
 ```
 
 ## Contributing

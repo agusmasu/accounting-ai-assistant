@@ -1,8 +1,9 @@
-# Git
+# .gcloudignore file for Cloud Functions deployment
 .git
 .gitignore
-
-# Python
+.pytest_cache
+.vscode/
+venv/
 __pycache__/
 *.py[cod]
 *$py.class
@@ -23,21 +24,12 @@ var/
 *.egg-info/
 .installed.cfg
 *.egg
-
-# Virtual Environment
-venv/
-ENV/
-
-# IDE
-.idea/
-.vscode/
-*.swp
-*.swo
-
-# Logs
-*.log
-
-# Local development
+tests/
+*.md
+!README.md
 run_with_ngrok.py
-test_whatsapp_integration.py
-WHATSAPP_INTEGRATION.md 
+deploy.sh
+deploy_test.sh
+test_*.py
+*.yaml
+*.pdf 

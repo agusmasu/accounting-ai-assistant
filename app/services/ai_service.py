@@ -80,7 +80,7 @@ class AIService:
             debug=False
         )
     
-    async def process_text(self, text: str, thread_id: str = None) -> Dict[str, Any]:
+    async def   process_text(self, text: str, thread_id: str = None) -> Dict[str, Any]:
         """
         Process text using the agent to extract invoice information and take actions.
         

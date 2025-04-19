@@ -1,5 +1,6 @@
 import os
 import json
+import logging
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
@@ -8,12 +9,22 @@ from app.services.whatsapp_service import WhatsAppService
 from app.services.ai_service import AIService
 from app.services.tusfacturas_service import TusFacturasService
 from app.models.invoice import InvoiceInputData
+from app.logging_config import setup_logging
+from app.middleware.logging_middleware import RequestLoggingMiddleware
+from app.utils.logger import get_request_logger
 
 # Load environment variables
 load_dotenv()
 
+# Setup logging
+setup_logging()
+logger = logging.getLogger(__name__)
+
 # Initialize FastAPI app
 app = FastAPI(title="FacturAI API")
+
+# Add request logging middleware
+app.add_middleware(RequestLoggingMiddleware)
 
 # Configure CORS
 app.add_middleware(
@@ -23,8 +34,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-logger = logging.getLogger(__name__)
 
 # Initialize services
 whatsapp_service = WhatsAppService()
@@ -36,25 +45,42 @@ async def whatsapp_webhook(request: Request):
     """
     Webhook endpoint for WhatsApp messages
     """
-    logger.info(f"Received request from a WhatsApp webhook")
+    # Get a logger with request context
+    req_logger = get_request_logger(request, __name__)
+    
+    req_logger.info("Received request from a WhatsApp webhook")
     try:
         # Check if this is a test request
         is_test_mode = request.query_params.get("test_mode") == "true"
         if is_test_mode:
-            print("Test mode enabled - bypassing signature verification")
+            req_logger.debug("Test mode enabled - bypassing signature verification")
         
         # Verify WhatsApp webhook
         if not whatsapp_service.verify_webhook(request):
+            req_logger.warning("Invalid webhook signature")
             raise HTTPException(status_code=403, detail="Invalid webhook signature")
 
         # Get message data
         data = await request.json()
         
+        # Log message metadata
+        req_logger.info(
+            "Processing message",
+            extra={
+                "message_type": "voice" if whatsapp_service.is_voice_message(data) else
+                                "text" if whatsapp_service.is_text_message(data) else
+                                "image" if whatsapp_service.is_image_message(data) else "unknown"
+            }
+        )
+        
         # Process voice message
         if whatsapp_service.is_voice_message(data):
+            req_logger.info("Processing voice message")
             # Download voice message
             voice_url = whatsapp_service.get_voice_url(data)
             voice_file = await whatsapp_service.download_voice(voice_url)
+            
+            req_logger.info("Voice file downloaded successfully")
             
             # Process voice with AI
             invoice_data = await ai_service.process_voice(voice_file)
@@ -116,6 +142,7 @@ async def whatsapp_webhook(request: Request):
         return {"status": "ignored", "message": "Not a supported message type"}
         
     except Exception as e:
+        req_logger.error(f"Error processing webhook: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/webhook/whatsapp")
@@ -123,6 +150,7 @@ async def verify_webhook(request: Request):
     """
     Verify WhatsApp webhook
     """
+    logger.info("Verifying WhatsApp webhook")
     return whatsapp_service.handle_verification(request)
 
 # Cloud Functions entry point
@@ -131,6 +159,7 @@ def whatsapp_webhook_function(request):
     """
     Cloud Functions entry point for WhatsApp webhook
     """
+    logger.info(f"Received request in Cloud Function: {request.method}")
     # Convert the request to a FastAPI request
     fastapi_request = Request(scope=request.environ)
     

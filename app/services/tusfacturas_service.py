@@ -50,15 +50,6 @@ class TusFacturasService:
     async def generate_invoice(self, invoice: InvoiceInputData) -> Dict[str, Any]:
         """Generate an invoice using TusFacturasApp API"""
         try:
-            # Reload environment variables to ensure we have the latest values
-            load_dotenv()
-            self.api_key = os.getenv("TUSFACTURAS_API_KEY")
-            self.api_token = os.getenv("TUSFACTURAS_API_TOKEN")
-            self.user_token = os.getenv("TUSFACTURAS_USER_TOKEN")
-
-            if not all([self.api_key, self.api_token, self.user_token]):
-                raise ValueError("Missing required TusFacturasApp credentials in environment variables")
-
             # Calculate expiration date (30 days from invoice date)
             expiration_date = invoice.invoice_date + timedelta(days=30)
 

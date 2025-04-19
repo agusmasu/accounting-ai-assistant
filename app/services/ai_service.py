@@ -69,7 +69,7 @@ class AIService:
                 - razon_social: "Sin Especificar"
                 - domicilio: "Sin Especificar"
                 - provincia: 0    
-        """        
+        """
 
         # Create the agent
         self.agent_executor = create_react_agent(
@@ -135,32 +135,6 @@ class AIService:
         processed_result["thread_id"] = thread_id
         
         return processed_result
-    
-    async def stream_response(self, text: str, thread_id: str = None):
-        """
-        Stream the agent's response for real-time feedback.
-        
-        Args:
-            text: The text input from the user
-            thread_id: Unique identifier for the conversation thread (for memory)
-            
-        Returns:
-            Generator yielding response chunks
-        """
-        # Create a unique thread ID if none provided
-        if thread_id is None:
-            thread_id = f"thread_{datetime.now().strftime('%Y%m%d%H%M%S')}"
-            
-        # Set up configuration with thread ID
-        config = {"configurable": {"thread_id": thread_id}}
-        
-        # Stream response from the agent
-        for chunk in self.agent_executor.stream(
-            {"messages": [HumanMessage(content=text)]},
-            config,
-            stream_mode="messages"  # Stream messages in chunks
-        ):
-            yield chunk
     
     def _extract_agent_response(self, agent_result: Dict[str, Any]) -> Dict[str, Any]:
         """

@@ -1,16 +1,13 @@
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 import os
-from .services.whatsapp_service import WhatsAppService
-from .services.ai_service import AIService
-from .services.tusfacturas_service import TusFacturasService
-from .models.invoice import InvoiceInputData
+from app.api.router import api_router
 
 # Load environment variables
 load_dotenv()
 
-app = FastAPI(title="FacturAI API")
+app = FastAPI(title="FacturAI API", description="API for accounting AI assistant")
 
 # Configure CORS
 app.add_middleware(
@@ -21,100 +18,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Initialize services
-whatsapp_service = WhatsAppService()
-ai_service = AIService()
-tusfacturas_service = TusFacturasService()
+# Include API router
+app.include_router(api_router)
 
-@app.post("/webhook/whatsapp")
-async def whatsapp_webhook(request: Request):
-    """
-    Webhook endpoint for WhatsApp messages
-    """
-    try:
-        # Check if this is a test request
-        is_test_mode = request.query_params.get("test_mode") == "true"
-        if is_test_mode:
-            print("Test mode enabled - bypassing signature verification")
-        
-        # Verify WhatsApp webhook
-        if not whatsapp_service.verify_webhook(request):
-            raise HTTPException(status_code=403, detail="Invalid webhook signature")
-
-        # Get message data
-        data = await request.json()
-        
-        # Process voice message
-        if whatsapp_service.is_voice_message(data):
-            # Download voice message
-            voice_url = whatsapp_service.get_voice_url(data)
-            voice_file = await whatsapp_service.download_voice(voice_url)
-            
-            # Process voice with AI
-            invoice_data = await ai_service.process_voice(voice_file)
-            
-            # Generate invoice using TusFacturasApp
-            invoice = InvoiceInputData(**invoice_data)
-            invoice_response = await tusfacturas_service.generate_invoice(invoice)
-            
-            # Send confirmation message with PDF link
-            await whatsapp_service.send_message(
-                data["entry"][0]["changes"][0]["value"]["messages"][0]["from"],
-                f"Invoice generated successfully!\nInvoice number: {invoice_response['invoice_number']}"
-            )
-            
-            # Send the PDF document
-            await whatsapp_service.send_document(
-                data["entry"][0]["changes"][0]["value"]["messages"][0]["from"],
-                invoice_response["pdf_url"],
-                f"Invoice #{invoice_response['invoice_number']}"
-            )
-            
-            return {"status": "success"}
-        
-        # Process text message
-        elif whatsapp_service.is_text_message(data):
-            # Get the sender's phone number and message content
-            sender_phone = whatsapp_service.get_sender_phone(data)
-            message_text = whatsapp_service.get_text_content(data)
-            
-            # Get the thread ID for this user
-            thread_id = whatsapp_service.get_thread_id(sender_phone)
-            
-            # Process the message with the AI agent
-            response = await ai_service.process_text(message_text, thread_id)
-            
-            # Send the AI response back to WhatsApp
-            await whatsapp_service.send_message(sender_phone, response["response"])
-            
-            return {"status": "success"}
-        
-        # Process image message (for future invoice processing)
-        elif whatsapp_service.is_image_message(data):
-            # Get the sender's phone number and image ID
-            sender_phone = whatsapp_service.get_sender_phone(data)
-            image_id = whatsapp_service.get_image_id(data)
-            
-            # Download the image
-            image_data = await whatsapp_service.download_image(image_id)
-            
-            # For now, just acknowledge receipt of the image
-            # In the future, this could be used to process invoice images
-            await whatsapp_service.send_message(
-                sender_phone,
-                "I received your image. Image processing for invoices will be available soon!"
-            )
-            
-            return {"status": "success"}
-            
-        return {"status": "ignored", "message": "Not a supported message type"}
-        
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.get("/webhook/whatsapp")
-async def verify_webhook(request: Request):
-    """
-    Verify WhatsApp webhook
-    """
-    return whatsapp_service.handle_verification(request) 
+# Add a simple health check endpoint
+@app.get("/health")
+async def health_check():
+    """Health check endpoint."""
+    return {"status": "healthy"} 

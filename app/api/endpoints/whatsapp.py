@@ -30,9 +30,9 @@ async def whatsapp_webhook(
             logger.info("Test mode enabled - bypassing signature verification")
         
         # Verify WhatsApp webhook
-        # if not await whatsapp_service.verify_webhook(request):
-        #     logger.warn("Invalid webhook signature")
-        #     raise HTTPException(status_code=403, detail="Invalid webhook signature")
+        if not await whatsapp_service.verify_webhook(request):
+            logger.warn("Invalid webhook signature")
+            raise HTTPException(status_code=403, detail="Invalid webhook signature")
 
         # Get message data
         data = await request.json()

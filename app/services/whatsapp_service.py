@@ -16,7 +16,7 @@ class WhatsAppService:
         logger.info("Initializing WhatsAppService")
         self.token = os.getenv("WHATSAPP_ACCESS_TOKEN")
         self.verify_token = "facturai_verify_token_123"
-        self.api_version = "v17.0"
+        self.api_version = "v22.0"
         self.base_url = f"https://graph.facebook.com/{self.api_version}"
         # Store active conversation threads
         self.active_threads: Dict[str, str] = {}
@@ -111,7 +111,7 @@ class WhatsAppService:
     async def send_message(self, to: str, message: str):
         """Send a message back to the user"""
         logger.info(f"Sending message to {to}: {message}")
-        url = f"{self.base_url}/messages"
+        url = f"{self.base_url}/611468238715975/messages"
         headers = {
             "Authorization": f"Bearer {self.token}",
             "Content-Type": "application/json"
@@ -120,7 +120,7 @@ class WhatsAppService:
             "messaging_product": "whatsapp",
             "to": to,
             "type": "text",
-            "text": {"body": message}
+            "text": message
         }
         
         async with aiohttp.ClientSession() as session:

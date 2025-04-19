@@ -67,7 +67,7 @@ async def whatsapp_webhook(
         
         # Process text message
         elif whatsapp_service.is_text_message(data):
-            logger.info("Processing text message"Ah)
+            logger.info("Processing text message")
 
             # Get the sender's phone number and message content
             sender_phone = whatsapp_service.get_sender_phone(data)

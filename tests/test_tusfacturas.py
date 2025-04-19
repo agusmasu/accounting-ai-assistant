@@ -2,7 +2,10 @@ import pytest
 import logging
 from datetime import datetime
 from app.services.tusfacturas_service import TusFacturasService
-from app.models.invoice import InvoiceInputData, InvoiceItem
+from app.models.invoice import (
+    InvoiceInputData, InvoiceItem, 
+    EnviaPorMailOption, ConditionIVA, RG5329Option
+)
 from dotenv import load_dotenv
 import os
 
@@ -29,6 +32,18 @@ def tusfacturas_service():
 def sample_invoice():
     """Fixture to create a sample invoice for testing"""
     return InvoiceInputData(
+        # Required fields based on model definition
+        documento_nro="20403942031",
+        razon_social="Test Company S.A.",
+        domicilio="Av. Test 123, CABA",
+        provincia=1,  # Assuming 1 is a valid province code
+        envia_por_mail=EnviaPorMailOption.N,
+        condicion_pago=1,  # Assuming 1 is a valid payment condition code
+        condicion_iva=ConditionIVA.CF,  # Consumidor Final
+        codigo="TEST001",
+        rg5329=RG5329Option.N,
+        
+        # Fields used in the service
         customer_name="Test Company S.A.",
         customer_tax_id="20403942031",
         customer_address="Av. Test 123, CABA",
@@ -105,25 +120,37 @@ async def test_generate_invoice(tusfacturas_service, sample_invoice):
 async def test_invalid_invoice(tusfacturas_service):
     """Test invoice generation with invalid data"""
     try:
-        # Create invalid invoice (missing required fields)
+        # Create invalid invoice with some required fields but invalid invoice type
         invalid_invoice = InvoiceInputData(
-            customer_name="",  # Empty name
-            customer_tax_id="",  # Empty tax ID
-            customer_address="",  # Empty address
-            items=[],  # Empty items
+            # Required fields with minimal values
+            documento_nro="0",  
+            razon_social="Test",
+            domicilio="Test",
+            provincia=1,
+            envia_por_mail=EnviaPorMailOption.N,
+            condicion_pago=1,
+            condicion_iva=ConditionIVA.CF,
+            codigo="TEST001",
+            rg5329=RG5329Option.N,
+            
+            # Set empty/invalid values for other fields
+            customer_name="",
+            customer_tax_id="0",
+            customer_address="",
+            items=[],
             invoice_date=datetime.now(),
-            invoice_type="A",
+            invoice_type="A",  # Invalid value - should be "FACTURA A"
             payment_method="Transfer",
             currency="ARS"
         )
 
-        # Attempt to generate invoice
+        # Attempt to generate invoice - should fail due to invoice_type
         with pytest.raises(Exception) as exc_info:
             await tusfacturas_service.generate_invoice(invalid_invoice)
 
         # Verify error message format according to API docs
         error_message = str(exc_info.value)
-        assert "TusFacturasApp error" in error_message, "Error should be from TusFacturasApp"
+        assert "invoice_type" in error_message, "Error should include invoice_type validation"
         
         logger.info(f"Test passed: Invalid invoice correctly rejected with error: {error_message}")
 

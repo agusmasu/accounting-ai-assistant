@@ -4,10 +4,10 @@
 set -e
 
 # Configuration
-PROJECT_ID="YOUR_PROJECT_ID"  # Replace with your Google Cloud project ID
+PROJECT_ID="voicein-456423"  # Replace with your Google Cloud project ID
 REGION="us-central1"          # Replace with your preferred region
-FUNCTION_NAME="accounting-ai-assistant"
-ENTRY_POINT="http_function"
+FUNCTION_NAME="accounting-ai-assistant-chat"
+ENTRY_POINT="send_message"
 RUNTIME="python311"           # Using Python 3.11
 MEMORY="512MB"
 TIMEOUT="300s"                # 5 minutes
@@ -70,8 +70,8 @@ echo ""
 echo "Deployment successful!"
 echo "Function URL: $FUNCTION_URL"
 echo ""
-echo "WhatsApp Webhook URL: $FUNCTION_URL/webhook/whatsapp"
+echo "Chat API URL: $FUNCTION_URL"
 echo ""
-echo "Chat API URL: $FUNCTION_URL/chat/send"
-echo ""
-echo "Make sure to update your WhatsApp webhook configuration if necessary." 
+echo "Example usage:"
+echo "curl -X POST $FUNCTION_URL -H \"Content-Type: application/json\" -d '{\"message\":\"your message here\"}'"
+echo "" 

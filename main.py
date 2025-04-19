@@ -24,6 +24,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+logger = logging.getLogger(__name__)
+
 # Initialize services
 whatsapp_service = WhatsAppService()
 ai_service = AIService()
@@ -34,6 +36,7 @@ async def whatsapp_webhook(request: Request):
     """
     Webhook endpoint for WhatsApp messages
     """
+    logger.info(f"Received request from a WhatsApp webhook")
     try:
         # Check if this is a test request
         is_test_mode = request.query_params.get("test_mode") == "true"

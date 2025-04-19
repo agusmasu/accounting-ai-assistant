@@ -6,9 +6,14 @@ from fastapi import Request
 import aiohttp
 import json
 from typing import Dict, Optional
+import logging
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
 
 class WhatsAppService:
     def __init__(self):
+        logger.info("Initializing WhatsAppService")
         self.token = os.getenv("WHATSAPP_TOKEN")
         self.verify_token = "facturai_verify_token_123"
         self.api_version = "v17.0"
@@ -19,11 +24,14 @@ class WhatsAppService:
     async def verify_webhook(self, request: Request) -> bool:
         """Verify the webhook signature from WhatsApp"""
         # Check if this is a test request
+        logger.info("Verifying webhook signature")
         if request.query_params.get("test_mode") == "true":
+            logger.info("Test mode enabled - bypassing signature verification")
             return True
             
         signature = request.headers.get("X-Hub-Signature-256")
         if not signature:
+            logger.warn("No signature found in request headers")
             return False
             
         body = await request.body()
@@ -100,6 +108,7 @@ class WhatsAppService:
     
     async def send_message(self, to: str, message: str):
         """Send a message back to the user"""
+        logger.info(f"Sending message to {to}: {message}")
         url = f"{self.base_url}/messages"
         headers = {
             "Authorization": f"Bearer {self.token}",

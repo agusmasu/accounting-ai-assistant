@@ -13,7 +13,6 @@ MEMORY="512MB"
 TIMEOUT="300s"                # 5 minutes
 MIN_INSTANCES=0
 MAX_INSTANCES=5
-SOURCE="main_functions.py"
 
 # Check if gcloud is installed
 if ! command -v gcloud &> /dev/null; then

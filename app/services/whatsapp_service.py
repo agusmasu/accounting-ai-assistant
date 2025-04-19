@@ -16,7 +16,7 @@ class WhatsAppService:
         # Store active conversation threads
         self.active_threads: Dict[str, str] = {}
         
-    def verify_webhook(self, request: Request) -> bool:
+    async def verify_webhook(self, request: Request) -> bool:
         """Verify the webhook signature from WhatsApp"""
         # Check if this is a test request
         if request.query_params.get("test_mode") == "true":
@@ -26,7 +26,7 @@ class WhatsAppService:
         if not signature:
             return False
             
-        body = request.body()
+        body = await request.body()
         expected_signature = hmac.new(
             self.verify_token.encode(),
             body,
@@ -149,7 +149,7 @@ class WhatsAppService:
                 if response.status != 200:
                     raise Exception("Failed to send document")
     
-    def handle_verification(self, request: Request):
+    async def handle_verification(self, request: Request):
         """Handle WhatsApp webhook verification"""
         mode = request.query_params.get("hub.mode")
         token = request.query_params.get("hub.verify_token")

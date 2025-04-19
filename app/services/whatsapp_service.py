@@ -14,7 +14,7 @@ logging.basicConfig(level=logging.INFO)
 class WhatsAppService:
     def __init__(self):
         logger.info("Initializing WhatsAppService")
-        self.token = os.getenv("WHATSAPP_TOKEN")
+        self.token = os.getenv("WHATSAPP_ACCESS_TOKEN")
         self.verify_token = "facturai_verify_token_123"
         self.api_version = "v17.0"
         self.base_url = f"https://graph.facebook.com/{self.api_version}"

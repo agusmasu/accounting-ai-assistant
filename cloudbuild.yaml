@@ -30,7 +30,7 @@ steps:
       - >-
         --labels=managed-by=gcp-cloud-build-deploy-cloud-run,commit-sha=$COMMIT_SHA,gcb-build-id=$BUILD_ID,gcb-trigger-id=$_TRIGGER_ID
       - '--region=$_DEPLOY_REGION'
-      - '--update-secrets=OPENAI_API_KEY=openai-api-key:latest,TUSFACTURAS_API_KEY=tusfacturas-api-key:latest,TUSFACTURAS_API_TOKEN=tusfacturas-api-token:latest,TUSFACTURAS_USER_TOKEN=tusfacturas-user-token:latest'
+      - '--update-secrets=OPENAI_API_KEY=openai-api-key:latest,TUSFACTURAS_API_KEY=tusfacturas-api-key:latest,TUSFACTURAS_API_TOKEN=tusfacturas-api-token:latest,TUSFACTURAS_USER_TOKEN=tusfacturas-user-token:latest,WHATSAPP_ACCESS_TOKEN=whatsapp-access-token:latest'
       - '--quiet'
     id: Deploy
     entrypoint: gcloud

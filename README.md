@@ -38,7 +38,7 @@ pip install -r requirements.txt
 4. Create a `.env` file in the project root with the following variables:
 ```env
 # WhatsApp Configuration
-WHATSAPP_TOKEN=your_whatsapp_token
+WHATSAPP_ACCESS_TOKEN=your_whatsapp_token
 WHATSAPP_VERIFY_TOKEN=your_verify_token
 
 # OpenAI Configuration

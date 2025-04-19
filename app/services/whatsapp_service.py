@@ -120,7 +120,9 @@ class WhatsAppService:
             "messaging_product": "whatsapp",
             "to": to,
             "type": "text",
-            "text": message
+            "text": {
+                "body": message
+            }
         }
         
         async with aiohttp.ClientSession() as session:

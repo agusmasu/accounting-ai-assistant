@@ -126,6 +126,8 @@ class WhatsAppService:
         async with aiohttp.ClientSession() as session:
             async with session.post(url, headers=headers, json=data) as response:
                 if response.status != 200:
+                    logger.warn(f"Failed to send message: {response.status}")
+                    logger.warn(f"Response: {await response.text()}")
                     raise Exception("Failed to send message")
     
     async def send_document(self, to: str, document_url: str, caption: str = None):

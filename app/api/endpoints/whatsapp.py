@@ -1,4 +1,5 @@
 """WhatsApp webhook endpoints."""
+import logging
 from fastapi import APIRouter, Request, HTTPException, Depends
 from app.api.deps import get_whatsapp_service, get_ai_service, get_tusfacturas_service
 from app.services.whatsapp_service import WhatsAppService
@@ -7,6 +8,8 @@ from app.services.tusfacturas_service import TusFacturasService
 from app.models.invoice import InvoiceInputData
 
 router = APIRouter(prefix="/webhook/whatsapp", tags=["whatsapp"])
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
 
 
 @router.post("")
@@ -19,19 +22,21 @@ async def whatsapp_webhook(
     """
     Webhook endpoint for WhatsApp messages
     """
+    logger.info("Starting WhatsApp webhook. A message has been received")
     try:
         # Check if this is a test request
         is_test_mode = request.query_params.get("test_mode") == "true"
         if is_test_mode:
-            print("Test mode enabled - bypassing signature verification")
+            logger.info("Test mode enabled - bypassing signature verification")
         
         # Verify WhatsApp webhook
         if not await whatsapp_service.verify_webhook(request):
+            logger.warn("Invalid webhook signature")
             raise HTTPException(status_code=403, detail="Invalid webhook signature")
 
         # Get message data
         data = await request.json()
-        
+        logger.info(f"Message data: {data}")
         # Process voice message
         if whatsapp_service.is_voice_message(data):
             # Download voice message
@@ -62,6 +67,8 @@ async def whatsapp_webhook(
         
         # Process text message
         elif whatsapp_service.is_text_message(data):
+            logger.info("Processing text message")
+            
             # Get the sender's phone number and message content
             sender_phone = whatsapp_service.get_sender_phone(data)
             message_text = whatsapp_service.get_text_content(data)

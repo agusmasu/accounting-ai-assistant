@@ -41,7 +41,9 @@ class WhatsAppService:
             hashlib.sha256
         ).hexdigest()
         
-        return hmac.compare_digest(signature, f"sha256={expected_signature}")
+        signature_matches: bool = hmac.compare_digest(signature, f"sha256={expected_signature}")
+        logger.info(f"Signature verification result: {signature_matches}")
+        return signature_matches
     
     def is_voice_message(self, data: dict) -> bool:
         """Check if the message is a voice message"""

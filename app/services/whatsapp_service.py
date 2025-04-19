@@ -10,7 +10,7 @@ from typing import Dict, Optional
 class WhatsAppService:
     def __init__(self):
         self.token = os.getenv("WHATSAPP_TOKEN")
-        self.verify_token = os.getenv("WHATSAPP_VERIFY_TOKEN")
+        self.verify_token = "facturai_verify_token_123"
         self.api_version = "v17.0"
         self.base_url = f"https://graph.facebook.com/{self.api_version}"
         # Store active conversation threads

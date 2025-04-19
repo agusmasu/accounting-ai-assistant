@@ -118,9 +118,11 @@ class WhatsAppService:
         }
         data = {
             "messaging_product": "whatsapp",
+            "recipient_type": "individual",
             "to": to,
             "type": "text",
             "text": {
+                "preview_url": False,
                 "body": message
             }
         }

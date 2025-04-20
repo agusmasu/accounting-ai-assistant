@@ -151,7 +151,9 @@ class WhatsAppService:
         
         data = {
             "messaging_product": "whatsapp",
-            "to": to,
+            # "to": to,
+            # TODO change this to the actual phone number
+            "to": "54348915594919",
             "type": "document",
             "document": {
                 "link": document_url

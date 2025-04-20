@@ -21,7 +21,6 @@ class ChatResponse(BaseModel):
     response: str
     thread_id: str
     tool_outputs: List[Dict[str, Any]] = []
-    has_invoice_data: bool = False
 
 
 class CreateInvoiceRequest(BaseModel):
@@ -57,18 +56,10 @@ async def send_message(
     response_text = result.get("response", "")
     tool_outputs = result.get("tool_outputs", [])
     
-    # Check if invoice data is available
-    has_invoice_data = False
-    for tool_output in tool_outputs:
-        if "create_invoice" in str(tool_output.get("tool", "")):
-            has_invoice_data = True
-            break
-    
     return ChatResponse(
         response=response_text,
         thread_id=request.thread_id,
-        tool_outputs=tool_outputs,
-        has_invoice_data=has_invoice_data
+        tool_outputs=tool_outputs
     )
 
 

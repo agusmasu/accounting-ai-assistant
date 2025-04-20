@@ -1,6 +1,7 @@
 import asyncio
 from app.services.ai_service import AIService
 from app.services.tusfacturas_service import TusFacturasService
+from app.services.memory_service import MemoryService
 from app.models.invoice import InvoiceInputData
 import json
 from dotenv import load_dotenv
@@ -12,7 +13,8 @@ load_dotenv()
 
 async def main():
     # Initialize services
-    ai_service = AIService()
+    memory_service = MemoryService()
+    ai_service = AIService(memory_service=memory_service)
     tusfacturas_service = TusFacturasService()
     
     # Create a unique thread ID for this conversation session
@@ -59,24 +61,26 @@ async def main():
                 if "create_invoice" in str(tool_output.get("tool", "")):
                     invoice_data = tool_output.get("output")
                     break
-            
+                    
+            # If invoice data was extracted, ask the user if they want to create it
             if invoice_data:
-                # When invoice data is available, ask for confirmation
-                print("\n--- Invoice Ready for Confirmation ---")
-                confirm = input("\nWould you like to generate this invoice? (yes/no): ").strip().lower()
+                print("\nDetected invoice data:")
+                print(json.dumps(invoice_data, indent=2, ensure_ascii=False))
                 
-                if confirm == 'yes':
-                    print("\nGenerating invoice...")
-                    invoice_response = await tusfacturas_service.generate_invoice(invoice_data)
-                    print("\nInvoice generated successfully!")
-                    print(f"Invoice number: {invoice_response['invoice_number']}")
-                    print(f"PDF URL: {invoice_response['pdf_url']}")
-                else:
-                    print("\nInvoice generation cancelled.")
+                create_choice = input("\nDo you want to create this invoice? (yes/no): ").strip().lower()
                 
+                if create_choice == 'yes' or create_choice == 'y':
+                    print("\nCreating invoice with TusFacturas...")
+                    try:
+                        invoice_result = tusfacturas_service.create_invoice(invoice_data)
+                        print(f"Success! Invoice created: {invoice_result}")
+                    except Exception as e:
+                        print(f"Error creating invoice: {str(e)}")
+        except KeyboardInterrupt:
+            print("\nExiting...")
+            break
         except Exception as e:
             print(f"\nError: {str(e)}")
-            print("Please try again with a different input.")
 
 if __name__ == "__main__":
     asyncio.run(main()) 

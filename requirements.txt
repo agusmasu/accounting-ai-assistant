@@ -14,4 +14,6 @@ pytest==8.0.0
 pytest-asyncio==0.23.5
 pytest-cov==4.1.0
 functions-framework==3.*
-redis==5.0.1
+langgraph-checkpoint-postgres
+psycopg-pool
+psycopg

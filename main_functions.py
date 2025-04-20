@@ -1,12 +1,14 @@
 import asyncio
 import logging
 from app.services.ai_service import AIService
+from app.services.memory_service import MemoryService
 import flask
 import functions_framework
 from langchain_core.messages import HumanMessage
 import json
 
-ai_service = AIService()
+memory_service = MemoryService()
+ai_service = AIService(memory_service=memory_service)
 logger = logging.getLogger(__name__)
 
 @functions_framework.http

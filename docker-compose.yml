@@ -5,28 +5,36 @@ services:
     build: .
     ports:
       - "8080:8080"
+    env_file:
+      - .env
     environment:
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=appdb
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
     volumes:
       - .:/app
     depends_on:
-      - redis
+      - postgres
     networks:
       - app-network
 
-  redis:
-    image: redis:7-alpine
+  postgres:
+    image: postgres:15-alpine
     ports:
-      - "6379:6379"
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=appdb
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
     volumes:
-      - redis-data:/data
+      - postgres-data:/var/lib/postgresql/data
     networks:
       - app-network
-    command: redis-server --appendonly yes
 
 networks:
   app-network:
 
 volumes:
-  redis-data: 
+  postgres-data: 

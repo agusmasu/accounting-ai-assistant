@@ -1,28 +1,47 @@
 import logging
 import os
-import redis
 from typing import Dict, Optional
+from langgraph.checkpoint.postgres import PostgresSaver
+
+import psycopg
+from psycopg_pool import ConnectionPool
 
 logger = logging.getLogger(__name__)
 
 class MemoryService:
     def __init__(self):
-        logger.info("Initializing MemoryService with Redis")
-        # Initialize Redis connection
-        redis_host = os.environ.get("REDIS_HOST", "localhost")
-        redis_port = int(os.environ.get("REDIS_PORT", 6379))
-        try:
-            self.redis = redis.Redis(host=redis_host, port=redis_port, decode_responses=True)
-            logger.info(f"Connected to Redis at {redis_host}:{redis_port}")
-        except Exception as e:
-            logger.error(f"Failed to connect to Redis: {e}")
-            # Fallback to in-memory storage
-            self.redis = None
-            logger.warning("Using in-memory storage as fallback")
-        
+        logger.info("Initializing MemoryService with in-memory storage")
         # Local cache for active threads
         self.active_threads: Dict[str, str] = {}
-    
+        self.db_host = os.environ.get("POSTGRES_HOST", "localhost")
+        self.db_port = os.environ.get("POSTGRES_PORT", 5432)
+        self.db_name = os.environ.get("POSTGRES_DB", "appdb")
+        self.db_user = os.environ.get("POSTGRES_USER", "postgres")
+        self.db_password = os.environ.get("POSTGRES_PASSWORD", "postgres")
+        self.db_url = f"postgresql://{self.db_user}:{self.db_password}@{self.db_host}:{self.db_port}/{self.db_name}"
+        
+        # Initialize connection pool and checkpointer
+        self.connection_pool = ConnectionPool(
+            conninfo=self.db_url,
+            max_size=20,
+            kwargs={"autocommit": True, "prepare_threshold": 0}
+        )
+        self.checkpointer = None
+
+    def get_checkpointer(self):
+        """
+        Get or create a checkpoint for a given identifier (like phone number)
+        
+        Returns:
+            The PostgresSaver checkpointer
+        """        
+        if self.checkpointer is None:
+            self.checkpointer = PostgresSaver(self.connection_pool)
+            # NOTE: you need to call .setup() the first time you're using your checkpointer
+            self.checkpointer.setup()
+        
+        return self.checkpointer
+
     def get_thread_id(self, identifier: str, prefix: str = "") -> str:
         """
         Get or create a thread ID for a given identifier (like phone number)
@@ -36,25 +55,10 @@ class MemoryService:
         """
         thread_key = f"{prefix}_{identifier}" if prefix else identifier
         
-        # Try to get from Redis first
-        if self.redis:
-            redis_key = f"thread:{identifier}"
-            stored_thread = self.redis.get(redis_key)
-            if stored_thread:
-                self.active_threads[identifier] = stored_thread
-                logger.info(f"Retrieved thread ID from Redis for {identifier}: {stored_thread}")
-                return stored_thread
-        
-        # If not found in Redis or Redis is not available, use local cache
+        # Use local cache
         if identifier not in self.active_threads:
             logger.info(f"Creating new thread ID for {identifier}")
             self.active_threads[identifier] = thread_key
-            
-            # Store in Redis if available
-            if self.redis:
-                redis_key = f"thread:{identifier}"
-                self.redis.set(redis_key, thread_key)
-                logger.info(f"Stored thread ID in Redis for {identifier}")
         
         logger.info(f"Thread ID for {identifier}: {self.active_threads[identifier]}")
         return self.active_threads[identifier]

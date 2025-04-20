@@ -7,6 +7,7 @@ import aiohttp
 import json
 from typing import Dict, Optional
 import logging
+from app.services.memory_service import MemoryService
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -18,8 +19,8 @@ class WhatsAppService:
         self.verify_token = "facturai_verify_token_123"
         self.api_version = "v22.0"
         self.base_url = f"https://graph.facebook.com/{self.api_version}"
-        # Store active conversation threads
-        self.active_threads: Dict[str, str] = {}
+        # Use memory service for thread management
+        self.memory_service = MemoryService()
         
     async def verify_webhook(self, request: Request) -> bool:
         """Verify the webhook signature from WhatsApp"""
@@ -185,8 +186,4 @@ class WhatsAppService:
         """
         Get or create a thread ID for a phone number
         """
-        if phone_number not in self.active_threads:
-            logger.info(f"Creating new thread ID for {phone_number}")
-            self.active_threads[phone_number] = f"whatsapp_{phone_number}"
-        logger.info(f"Thread ID for {phone_number}: {self.active_threads[phone_number]}")
-        return self.active_threads[phone_number] 
+        return self.memory_service.get_thread_id(phone_number, "whatsapp") 

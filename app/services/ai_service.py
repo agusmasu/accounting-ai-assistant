@@ -8,6 +8,7 @@ from langchain_openai import ChatOpenAI
 from langchain.schema import HumanMessage, AIMessage
 from langgraph.checkpoint.memory import MemorySaver
 from app.services.tools.invoice import create_invoice
+from app.services.memory_service import MemoryService
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -36,12 +37,16 @@ class AIService:
     ```
     """
     
-    def __init__(self):
+    def __init__(self, memory_service: MemoryService = None):
         # Get OpenAI API key from environment variables
         self.openai_api_key = os.getenv("OPENAI_API_KEY")
         if not self.openai_api_key:
             raise ValueError("OPENAI_API_KEY environment variable is not set")
         logger.info(f"OpenAI API Key loaded (first 8 chars): {self.openai_api_key[:8]}...")
+        
+        # Initialize Memory Service if not provided
+        self.memory_service = memory_service or MemoryService()
+        logger.info("Memory Service injected into AIService")
         
         # Initialize LLM
         self.llm = ChatOpenAI(
@@ -54,7 +59,8 @@ class AIService:
         self.tools = [create_invoice]
         
         # Initialize memory for conversation persistence
-        self.memory = MemorySaver()
+        self.memory = self.memory_service.get_checkpointer()
+        logger.info("Using PostgreSQL checkpointer from MemoryService")
 
         prompt = """
             You are a helpful accountant assistant that can create invoices.
@@ -80,7 +86,7 @@ class AIService:
             debug=False
         )
     
-    async def   process_text(self, text: str, thread_id: str = None) -> Dict[str, Any]:
+    async def process_text(self, text: str, thread_id: str = None) -> Dict[str, Any]:
         """
         Process text using the agent to extract invoice information and take actions.
         
@@ -97,9 +103,9 @@ class AIService:
             
         # Set up configuration with thread ID for memory
         config = {"configurable": {"thread_id": thread_id}}
-        
+
         # Process with the agent
-        result = await self.agent_executor.ainvoke(
+        result = self.agent_executor.invoke(
             {"messages": [HumanMessage(content=text)]},
             config
         )

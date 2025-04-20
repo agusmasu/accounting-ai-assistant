@@ -112,6 +112,8 @@ class WhatsAppService:
         """Send a message back to the user"""
         logger.info(f"Sending message to {to}: {message}")
         url = f"{self.base_url}/611468238715975/messages"
+        # TODO change this to the actual phone number
+        to = "54348915594919"
         headers = {
             "Authorization": f"Bearer {self.token}",
             "Content-Type": "application/json"
@@ -133,6 +135,7 @@ class WhatsAppService:
                     logger.warn(f"Failed to send message: {response.status}")
                     logger.warn(f"Response: {await response.text()}")
                     raise Exception("Failed to send message")
+                logger.info(f"Message sent successfully to {to}")
     
     async def send_document(self, to: str, document_url: str, caption: str = None):
         """
@@ -151,9 +154,7 @@ class WhatsAppService:
         
         data = {
             "messaging_product": "whatsapp",
-            # "to": to,
-            # TODO change this to the actual phone number
-            "to": "54348915594919",
+            "to": to,
             "type": "document",
             "document": {
                 "link": document_url

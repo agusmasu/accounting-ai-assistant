@@ -132,6 +132,7 @@ class TusFacturasService:
                             error_msg = "Error en la conexión con la API"
                             if isinstance(result, dict):
                                 error_msg = result.get("error_msg", error_msg)
+                            logger.error(f"TusFacturasApp error: {error_msg}")
                             raise Exception(f"TusFacturasApp error: {error_msg}")
 
                         # Handle API error responses
@@ -145,6 +146,7 @@ class TusFacturasService:
                                     error_messages.extend(result["errores"])
                                 
                                 error_msg = " | ".join(error_messages) if error_messages else "Error desconocido"
+                                logger.error(f"TusFacturasApp error: {error_msg}")
                                 raise Exception(f"TusFacturasApp error: {error_msg}")
                             elif result.get("error") == "N":
                                 return {
@@ -161,7 +163,7 @@ class TusFacturasService:
                                     "afip_qr": result.get("afip_qr"),
                                     "afip_codigo_barras": result.get("afip_codigo_barras")
                                 }
-
+                        logger.error(f"TusFacturasApp error: Formato de respuesta inesperado - {result}")
                         raise Exception(f"TusFacturasApp error: Formato de respuesta inesperado - {result}")
 
                     except Exception as e:

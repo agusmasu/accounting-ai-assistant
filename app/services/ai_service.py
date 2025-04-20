@@ -75,6 +75,8 @@ class AIService:
                 - razon_social: "Sin Especificar"
                 - domicilio: "Sin Especificar"
                 - provincia: 0    
+
+            The message you return needs to follow the formatting of a WhatsApp message, as we're using the WhatsApp API to send messages to the user.
         """
 
         # Create the agent

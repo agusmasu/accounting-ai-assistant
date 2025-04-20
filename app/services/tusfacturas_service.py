@@ -22,12 +22,6 @@ class TusFacturasService:
         if not all([self.api_key, self.api_token, self.user_token]):
             raise ValueError("Missing required TusFacturasApp credentials in environment variables")
 
-        logger.info("TusFacturasService initialized with:")
-        logger.info(f"API URL: {self.api_url}")
-        logger.info(f"API Key: {self.api_key}")
-        logger.info(f"API Token: {self.api_token}")
-        logger.info(f"User Token: {self.user_token}")
-
     def _prepare_items(self, items: List[InvoiceItem]) -> List[Dict[str, Any]]:
         """Prepare invoice items in TusFacturasApp format"""
         formatted_items = []
@@ -105,12 +99,6 @@ class TusFacturasService:
             }
 
             logger.info(f"Sending invoice data to TusFacturasApp: {invoice_data}")
-
-            # Print the credentials
-            logger.info(f"API URL: {self.api_url}")
-            logger.info(f"API Key: {self.api_key}")
-            logger.info(f"API Token: {self.api_token}")
-            logger.info(f"User Token: {self.user_token}")
 
             # Send request to TusFacturasApp API
             async with aiohttp.ClientSession() as session:

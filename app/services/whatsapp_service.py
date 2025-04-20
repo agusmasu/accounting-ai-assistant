@@ -186,5 +186,7 @@ class WhatsAppService:
         Get or create a thread ID for a phone number
         """
         if phone_number not in self.active_threads:
+            logger.info(f"Creating new thread ID for {phone_number}")
             self.active_threads[phone_number] = f"whatsapp_{phone_number}"
+        logger.info(f"Thread ID for {phone_number}: {self.active_threads[phone_number]}")
         return self.active_threads[phone_number] 

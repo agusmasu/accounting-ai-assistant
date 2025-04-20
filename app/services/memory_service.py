@@ -19,7 +19,11 @@ class MemoryService:
         self.db_user = os.environ.get("POSTGRES_USER", "postgres")
         self.db_password = os.environ.get("POSTGRES_PASSWORD", "postgres")
         self.db_connect_options = os.environ.get("POSTGRES_CONNECT_OPTIONS", "")
-        self.db_url = f"postgresql://{self.db_user}:{self.db_password}@{self.db_host}:{self.db_port}/{self.db_name}?sslmode=require&options={self.db_connect_options}"
+        # Use percent encoding for the options parameter
+        if self.db_connect_options:
+            self.db_url = f"postgresql://{self.db_user}:{self.db_password}@{self.db_host}:{self.db_port}/{self.db_name}?sslmode=require&options={self.db_connect_options.replace('=', '%3D')}"
+        else:
+            self.db_url = f"postgresql://{self.db_user}:{self.db_password}@{self.db_host}:{self.db_port}/{self.db_name}?sslmode=require"
         
         # Initialize connection pool and checkpointer
         self.connection_pool = ConnectionPool(

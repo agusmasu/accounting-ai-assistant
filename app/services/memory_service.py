@@ -18,7 +18,8 @@ class MemoryService:
         self.db_name = os.environ.get("POSTGRES_DB", "appdb")
         self.db_user = os.environ.get("POSTGRES_USER", "postgres")
         self.db_password = os.environ.get("POSTGRES_PASSWORD", "postgres")
-        self.db_url = f"postgresql://{self.db_user}:{self.db_password}@{self.db_host}:{self.db_port}/{self.db_name}?sslmode=require"
+        self.db_connect_options = os.environ.get("POSTGRES_CONNECT_OPTIONS", "")
+        self.db_url = f"postgresql://{self.db_user}:{self.db_password}@{self.db_host}:{self.db_port}/{self.db_name}?sslmode=require&options={self.db_connect_options}"
         
         # Initialize connection pool and checkpointer
         self.connection_pool = ConnectionPool(

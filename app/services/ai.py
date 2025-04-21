@@ -76,7 +76,7 @@ class AIService:
             self.tools, 
             checkpointer=self.memory,
             prompt=prompt,
-            debug=False
+            debug=True
         )
     
     async def process_text(self, text: str, thread_id: str = None) -> Dict[str, Any]:

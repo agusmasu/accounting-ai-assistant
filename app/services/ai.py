@@ -9,6 +9,7 @@ from langchain.schema import HumanMessage, AIMessage
 from langgraph.checkpoint.memory import MemorySaver
 from app.services.tools.invoice import create_invoice
 from app.services.memory import MemoryService
+from langchain_google_genai import ChatGoogleGenerativeAI
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -23,6 +24,7 @@ class AIService:
     def __init__(self, memory_service: MemoryService = None):
         # Get OpenAI API key from environment variables
         self.openai_api_key = os.getenv("OPENAI_API_KEY")
+        self.gemini_api_key = os.getenv("GEMINI_API_KEY")
         if not self.openai_api_key:
             raise ValueError("OPENAI_API_KEY environment variable is not set")
         logger.info(f"OpenAI API Key loaded (first 8 chars): {self.openai_api_key[:8]}...")
@@ -32,12 +34,18 @@ class AIService:
         logger.info("Memory Service injected into AIService")
         
         # Initialize LLM
-        self.llm = ChatOpenAI(
-            model="gpt-4o-mini",
-            temperature=0,
-            openai_api_key=self.openai_api_key
+        # self.llm = ChatOpenAI(
+        #     model="gpt-4o-mini",
+        #     temperature=0,
+        #     openai_api_key=self.openai_api_key
+        # )
+
+        self.llm = ChatGoogleGenerativeAI(
+            model="gemini-2.0-flash",
+            google_api_key=self.gemini_api_key,
+            temperature=0
         )
-        
+
         # Set up tools
         self.tools = [create_invoice]
         

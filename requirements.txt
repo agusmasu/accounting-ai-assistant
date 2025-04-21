@@ -18,3 +18,4 @@ langgraph-checkpoint-postgres
 psycopg-pool
 psycopg
 sqlmodel
+langchain-google-genai

@@ -1,7 +1,7 @@
 import asyncio
-from app.services.ai_service import AIService
-from app.services.tusfacturas_service import TusFacturasService
-from app.services.memory_service import MemoryService
+from app.services.ai import AIService
+from app.services.tusfacturas import TusFacturasService
+from app.services.memory import MemoryService
 from app.models.invoice import InvoiceInputData
 import json
 from dotenv import load_dotenv

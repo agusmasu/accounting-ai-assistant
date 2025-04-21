@@ -17,3 +17,4 @@ functions-framework==3.*
 langgraph-checkpoint-postgres
 psycopg-pool
 psycopg
+sqlmodel

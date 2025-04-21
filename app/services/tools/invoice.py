@@ -1,7 +1,7 @@
 from langchain_core.tools import tool
 
 from app.models.invoice import InvoiceInputData
-from app.services.tusfacturas_service import TusFacturasService
+from app.services.tusfacturas import TusFacturasService
 
 @tool
 async def create_invoice(invoice_data: InvoiceInputData):

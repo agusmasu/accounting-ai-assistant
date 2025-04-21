@@ -2,9 +2,9 @@
 import logging
 from fastapi import APIRouter, Request, HTTPException, Depends
 from app.api.deps import get_whatsapp_service, get_ai_service, get_tusfacturas_service
-from app.services.whatsapp_service import WhatsAppService
-from app.services.ai_service import AIService
-from app.services.tusfacturas_service import TusFacturasService
+from app.services.whatsapp import WhatsAppService
+from app.services.ai import AIService
+from app.services.tusfacturas import TusFacturasService
 from app.models.invoice import InvoiceInputData
 
 router = APIRouter(prefix="/webhook/whatsapp", tags=["whatsapp"])

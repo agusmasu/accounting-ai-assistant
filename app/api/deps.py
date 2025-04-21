@@ -1,8 +1,8 @@
 """Dependency injection for the API endpoints."""
-from app.services.ai_service import AIService
-from app.services.tusfacturas_service import TusFacturasService
-from app.services.whatsapp_service import WhatsAppService
-from app.services.memory_service import MemoryService
+from app.services.ai import AIService
+from app.services.tusfacturas import TusFacturasService
+from app.services.whatsapp import WhatsAppService
+from app.services.memory import MemoryService
 
 
 def get_memory_service():

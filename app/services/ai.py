@@ -8,7 +8,7 @@ from langchain_openai import ChatOpenAI
 from langchain.schema import HumanMessage, AIMessage
 from langgraph.checkpoint.memory import MemorySaver
 from app.services.tools.invoice import create_invoice
-from app.services.memory_service import MemoryService
+from app.services.memory import MemoryService
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -18,23 +18,6 @@ class AIService:
     """
     AI Service that uses a LangGraph ReAct agent with tools to process user inputs
     and create invoices.
-    
-    Usage example:
-    ```python
-    # Initialize the service
-    ai_service = AIService()
-    
-    # Process a user request
-    response = await ai_service.process_text("Create an invoice for Acme Corp for 5 hours of consulting at $150 per hour")
-    
-    # Continue the conversation with the same thread ID
-    thread_id = response["thread_id"]
-    follow_up = await ai_service.continue_conversation("Add a 10% tax to that invoice", thread_id)
-    
-    # For streaming responses
-    async for chunk in ai_service.stream_response("What's the total amount?", thread_id):
-        print(chunk)
-    ```
     """
     
     def __init__(self, memory_service: MemoryService = None):
@@ -190,3 +173,10 @@ class AIService:
                     })
         
         return processed_result 
+    
+    def process_voice(self, voice: bytes, thread_id: str = None) -> Dict[str, Any]:
+        """
+        Process voice using the agent to extract invoice information and take actions.
+        """
+        # Convert voice to text
+        

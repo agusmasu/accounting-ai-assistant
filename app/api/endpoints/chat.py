@@ -1,8 +1,8 @@
 """Chat API endpoints."""
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
-from app.services.ai_service import AIService
-from app.services.tusfacturas_service import TusFacturasService
+from app.services.ai import AIService
+from app.services.tusfacturas import TusFacturasService
 from app.api.deps import get_ai_service, get_tusfacturas_service
 from typing import Dict, Any, Optional, List
 from datetime import datetime

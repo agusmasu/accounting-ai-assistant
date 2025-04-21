@@ -1,13 +1,17 @@
+from app.db import Db
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
-import os
 from app.api.router import api_router
 
 # Load environment variables
 load_dotenv()
 
 app = FastAPI(title="FacturAI API", description="API for accounting AI assistant")
+
+# Initialize database
+db = Db()
+db.create_all()
 
 # Configure CORS
 app.add_middleware(

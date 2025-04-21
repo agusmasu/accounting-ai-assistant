@@ -1,7 +1,7 @@
 import pytest
 import logging
 from datetime import datetime
-from app.services.tusfacturas_service import TusFacturasService
+from app.services.tusfacturas import TusFacturasService
 from app.models.invoice import (
     InvoiceInputData, InvoiceItem, 
     EnviaPorMailOption, ConditionIVA, RG5329Option

@@ -1,7 +1,7 @@
 import asyncio
 import logging
-from app.services.ai_service import AIService
-from app.services.memory_service import MemoryService
+from app.services.ai import AIService
+from app.services.memory import MemoryService
 import flask
 import functions_framework
 from langchain_core.messages import HumanMessage

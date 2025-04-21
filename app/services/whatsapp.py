@@ -7,7 +7,7 @@ import aiohttp
 import json
 from typing import Dict, Optional
 import logging
-from app.services.memory_service import MemoryService
+from app.services.memory import MemoryService
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)

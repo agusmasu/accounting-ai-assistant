@@ -34,17 +34,17 @@ class AIService:
         logger.info("Memory Service injected into AIService")
         
         # Initialize LLM
-        # self.llm = ChatOpenAI(
-        #     model="gpt-4o-mini",
-        #     temperature=0,
-        #     openai_api_key=self.openai_api_key
-        # )
-
-        self.llm = ChatGoogleGenerativeAI(
-            model="gemini-2.0-flash",
-            google_api_key=self.gemini_api_key,
-            temperature=0
+        self.llm = ChatOpenAI(
+            model="gpt-4o-mini",
+            temperature=0,
+            openai_api_key=self.openai_api_key
         )
+
+        # self.llm = ChatGoogleGenerativeAI(
+        #     model="gemini-2.0-flash",
+        #     google_api_key=self.gemini_api_key,
+        #     temperature=0
+        # )
 
         # Set up tools
         self.tools = [create_invoice]

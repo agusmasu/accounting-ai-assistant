@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 
 from fastapi import Depends
-from sqlmodel import Session
+from sqlmodel import Session, select
 from app.db import Db
 from app.models.conversation import Conversation
 
@@ -32,7 +32,8 @@ class ConversationService:
 
     def get_current_conversation(self, user_id: str) -> Conversation:
         # Get the most recent conversation for the user
-        conversation = self.db_session.query(Conversation).filter(Conversation.user_id == user_id).order_by(Conversation.last_message_at.desc()).first()
+        statement = select(Conversation).where(Conversation.user_id == user_id).order_by(Conversation.last_message_at.desc())
+        conversation = self.db_session.exec(statement).first()
         if conversation is None:
             return self.create_conversation(user_id)
         if self._should_create_new_conversation(user_id, conversation):

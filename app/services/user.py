@@ -3,6 +3,7 @@ from sqlmodel import Session, select
 from app.models.user import User
 from app.db import Db
 from fastapi import Depends
+from datetime import datetime
 
 
 class UserService:
@@ -34,11 +35,16 @@ class UserService:
         if not user:
             return None
         
+        # Update the user fields
         for key, value in user_data.items():
             setattr(user, key, value)
         
+        # Always update the updated_at timestamp
+        user.updated_at = datetime.now()
+        
         try:
             self.db_session.commit()
+            # Refresh the user object to get the latest data
             self.db_session.refresh(user)
             return user
         except Exception as e:

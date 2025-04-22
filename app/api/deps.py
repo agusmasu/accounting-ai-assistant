@@ -54,4 +54,5 @@ def get_tusfacturas_service():
 
 def get_whatsapp_service():
     """Return a singleton instance of WhatsAppService."""
-    return WhatsAppService() 
+    memory_service = get_memory_service()
+    return WhatsAppService(memory_service=memory_service)

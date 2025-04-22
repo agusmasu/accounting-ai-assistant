@@ -13,14 +13,14 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
 class WhatsAppService:
-    def __init__(self):
+    def __init__(self, memory_service: MemoryService):
         logger.info("Initializing WhatsAppService")
         self.token = os.getenv("WHATSAPP_ACCESS_TOKEN")
         self.verify_token = "facturai_verify_token_123"
         self.api_version = "v22.0"
         self.base_url = f"https://graph.facebook.com/{self.api_version}"
         # Use memory service for thread management
-        self.memory_service = MemoryService()
+        self.memory_service = memory_service
         
     async def verify_webhook(self, request: Request) -> bool:
         """Verify the webhook signature from WhatsApp"""

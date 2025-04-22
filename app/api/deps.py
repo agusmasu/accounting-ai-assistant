@@ -38,7 +38,9 @@ def get_conversation_service(db_session=Depends(lambda: Db().session)):
 
 def get_memory_service():
     """Return a singleton instance of MemoryService."""
-    return MemoryService(conversation_service=get_conversation_service())
+    user_service = get_user_service()
+    conversation_service = get_conversation_service()
+    return MemoryService(conversation_service=conversation_service, user_service=user_service)
 
 
 def get_ai_service():

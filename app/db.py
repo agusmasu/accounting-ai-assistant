@@ -2,6 +2,7 @@ from sqlmodel import create_engine, Session, SQLModel
 # Import all models here
 from app.models.user import *
 from app.models.invoice import *
+from app.models.conversation import *
 import os
 
 class Db:

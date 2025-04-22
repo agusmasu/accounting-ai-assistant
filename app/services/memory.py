@@ -1,15 +1,21 @@
 import logging
 import os
 from typing import Dict, Optional
+from fastapi import Depends, HTTPException
 from langgraph.checkpoint.postgres import PostgresSaver
+from sqlmodel import Session
 
 import psycopg
 from psycopg_pool import ConnectionPool
+from app.models.conversation import Conversation
+from app.models.user import User
+from app.services.conversation import ConversationService
+from app.services.user import UserService
 
 logger = logging.getLogger(__name__)
 
 class MemoryService:
-    def __init__(self):
+    def __init__(self, conversation_service: ConversationService, user_service: UserService):
         logger.info("Initializing MemoryService with in-memory storage")
         # Local cache for active threads
         self.active_threads: Dict[str, str] = {}
@@ -32,6 +38,11 @@ class MemoryService:
             kwargs={"autocommit": True, "prepare_threshold": 0}
         )
         self.checkpointer = None
+        self.conversation_service = conversation_service
+        self.user_service = user_service
+    @classmethod
+    def get_service(cls, conversation_service: ConversationService = Depends(ConversationService.get_service)):
+        return cls(conversation_service)
 
     def get_checkpointer(self):
         """
@@ -47,7 +58,7 @@ class MemoryService:
         
         return self.checkpointer
 
-    def get_thread_id(self, identifier: str, prefix: str = "") -> str:
+    def get_thread_id(self, phone_number: str) -> str:
         """
         Get or create a thread ID for a given identifier (like phone number)
         
@@ -58,12 +69,12 @@ class MemoryService:
         Returns:
             The thread ID
         """
-        thread_key = f"{prefix}_{identifier}" if prefix else identifier
-        
-        # Use local cache
-        if identifier not in self.active_threads:
-            logger.info(f"Creating new thread ID for {identifier}")
-            self.active_threads[identifier] = thread_key
-        
-        logger.info(f"Thread ID for {identifier}: {self.active_threads[identifier]}")
-        return self.active_threads[identifier]
+        logger.info(f"Getting thread ID for {phone_number}")
+        user: User = self.user_service.get_user_by_phone_number(phone_number)
+        if user is None:
+            logger.error(f"User not found for phone number {phone_number}")
+            raise HTTPException(status_code=404, detail="User not found")
+        else:
+            logger.info(f"User found for phone number {phone_number}")
+            current_conversation: Conversation = self.conversation_service.get_current_conversation(user.id)
+            return current_conversation.thread_id

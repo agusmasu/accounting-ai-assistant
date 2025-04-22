@@ -186,4 +186,4 @@ class WhatsAppService:
         """
         Get or create a thread ID for a phone number
         """
-        return self.memory_service.get_thread_id(phone_number, "whatsapp") 
+        return self.memory_service.get_thread_id(phone_number) 

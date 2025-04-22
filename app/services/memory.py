@@ -70,7 +70,8 @@ class MemoryService:
             The thread ID
         """
         logger.info(f"Getting thread ID for {phone_number}")
-        user: User = self.user_service.get_user_by_phone_number(phone_number)
+        user: Optional[User] = self.user_service.get_user_by_phone_number(phone_number)
+
         if user is None:
             logger.error(f"User not found for phone number {phone_number}")
             raise HTTPException(status_code=404, detail="User not found")

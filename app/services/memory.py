@@ -16,7 +16,6 @@ logger = logging.getLogger(__name__)
 
 class MemoryService:
     def __init__(self, conversation_service: ConversationService, user_service: UserService):
-        logger.info("Initializing MemoryService with in-memory storage")
         # Local cache for active threads
         self.active_threads: Dict[str, str] = {}
         self.db_host = os.environ.get("POSTGRES_HOST", "localhost")
@@ -40,9 +39,7 @@ class MemoryService:
         self.checkpointer = None
         self.conversation_service = conversation_service
         self.user_service = user_service
-    @classmethod
-    def get_service(cls, conversation_service: ConversationService = Depends(ConversationService.get_service)):
-        return cls(conversation_service)
+        logger.info(f"MemoryService initialized with user_service: {self.user_service}")
 
     def get_checkpointer(self):
         """

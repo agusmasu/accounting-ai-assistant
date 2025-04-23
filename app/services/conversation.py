@@ -10,10 +10,6 @@ class ConversationService:
     def __init__(self, db_session: Session):
         self.db_session = db_session
 
-    @classmethod
-    def get_service(cls, db_session: Session = Depends(lambda: Db().session)):
-        return cls(db_session)
-
     def create_conversation(self, user_id: str) -> Conversation:
         # Create a thread id , with the user id and the current datetime:
         thread_id = f"{user_id}-{datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}"

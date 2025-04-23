@@ -4,16 +4,13 @@ from app.models.user import User
 from app.db import Db
 from fastapi import Depends
 from datetime import datetime
+import logging
 
+logger = logging.getLogger(__name__)
 
 class UserService:
     def __init__(self, db_session: Session):
         self.db_session = db_session
-
-    # Dependency injection method for FastAPI
-    @classmethod
-    def get_service(cls, db_session: Session = Depends(lambda: Db().session)):
-        return cls(db_session)
 
     def get_user_by_id(self, user_id: int) -> Optional[User]:
         statement = select(User).where(User.id == user_id)
@@ -65,6 +62,7 @@ class UserService:
             raise e
     
     def get_user_by_phone_number(self, phone_number: str) -> Optional[User]:
+        logger.info(f"Getting user by phone number: {phone_number}")
         statement = select(User).where(User.phone_number == phone_number)
         result = self.db_session.exec(statement).first()
         return result

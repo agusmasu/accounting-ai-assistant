@@ -8,14 +8,23 @@ from fastapi import Depends, HTTPException, Security
 from fastapi.security import APIKeyHeader
 from app.services.user import UserService
 from app.db import Db
+from sqlmodel import Session
 import os
 
 # API Key header for admin authentication
 api_key_header = APIKeyHeader(name="X-Admin-API-Key")
 
-async def get_user_service(db_session=Depends(lambda: Db().session)):
+def get_db_session():
+    """Get database session."""
+    db = Db()
+    try:
+        yield db.session
+    finally:
+        db.session.close()
+
+def get_user_service(db_session: Session = Depends(get_db_session)):
     """Get user service instance."""
-    return UserService.get_service(db_session)
+    return UserService(db_session=db_session)
 
 async def verify_admin_api_key(api_key: str = Security(api_key_header)):
     """Verify admin API key."""
@@ -32,20 +41,20 @@ async def verify_admin_api_key(api_key: str = Security(api_key_header)):
         )
     return api_key
 
-def get_conversation_service(db_session=Depends(lambda: Db().session)):
+def get_conversation_service(db_session: Session = Depends(get_db_session)):
     """Return a singleton instance of ConversationService."""
     return ConversationService(db_session=db_session)
 
-def get_memory_service():
+def get_memory_service(
+    user_service: UserService = Depends(get_user_service),
+    conversation_service: ConversationService = Depends(get_conversation_service)
+):
     """Return a singleton instance of MemoryService."""
-    user_service = get_user_service()
-    conversation_service = get_conversation_service()
     return MemoryService(conversation_service=conversation_service, user_service=user_service)
 
 
-def get_ai_service():
+def get_ai_service(memory_service: MemoryService = Depends(get_memory_service)):
     """Return a singleton instance of AIService with MemoryService injected."""
-    memory_service = get_memory_service()
     return AIService(memory_service=memory_service)
 
 
@@ -54,7 +63,6 @@ def get_tusfacturas_service():
     return TusFacturasService()
 
 
-def get_whatsapp_service():
+def get_whatsapp_service(memory_service: MemoryService = Depends(get_memory_service)):
     """Return a singleton instance of WhatsAppService."""
-    memory_service = get_memory_service()
     return WhatsAppService(memory_service=memory_service)

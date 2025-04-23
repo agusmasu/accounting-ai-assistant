@@ -30,7 +30,7 @@ class AIService:
         logger.info(f"OpenAI API Key loaded (first 8 chars): {self.openai_api_key[:8]}...")
         
         # Initialize Memory Service if not provided
-        self.memory_service = memory_service or MemoryService()
+        self.memory_service = memory_service
         logger.info("Memory Service injected into AIService")
         
         # Initialize LLM
@@ -76,7 +76,7 @@ class AIService:
             self.tools, 
             checkpointer=self.memory,
             prompt=prompt,
-            debug=True
+            debug=False
         )
     
     async def process_text(self, text: str, thread_id: str = None) -> Dict[str, Any]:

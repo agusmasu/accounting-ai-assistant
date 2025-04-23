@@ -48,3 +48,13 @@ async def create_user(
             status_code=500,
             detail=f"Failed to create user: {str(e)}"
         ) 
+    
+@router.get("/users", response_model=list[User])
+async def get_all_users(
+    user_service: UserService = Depends(get_user_service),
+    _: str = Depends(verify_admin_api_key)  # Verify admin API key
+):
+    """
+    Get all users (Admin only).
+    """
+    return user_service.get_all_users()

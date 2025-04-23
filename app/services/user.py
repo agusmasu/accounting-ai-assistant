@@ -66,3 +66,8 @@ class UserService:
         statement = select(User).where(User.phone_number == phone_number)
         result = self.db_session.exec(statement).first()
         return result
+    
+    def get_all_users(self) -> list[User]:
+        statement = select(User)
+        result = self.db_session.exec(statement).all()
+        return result

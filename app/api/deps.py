@@ -53,9 +53,9 @@ def get_memory_service(
     return MemoryService(conversation_service=conversation_service, user_service=user_service)
 
 
-def get_ai_service(memory_service: MemoryService = Depends(get_memory_service)):
+def get_ai_service(memory_service: MemoryService = Depends(get_memory_service), conversation_service: ConversationService = Depends(get_conversation_service), user_service: UserService = Depends(get_user_service)):
     """Return a singleton instance of AIService with MemoryService injected."""
-    return AIService(memory_service=memory_service)
+    return AIService(memory_service=memory_service, conversation_service=conversation_service, user_service=user_service)
 
 
 def get_tusfacturas_service():

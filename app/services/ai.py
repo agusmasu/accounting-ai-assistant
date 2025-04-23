@@ -7,9 +7,12 @@ from langgraph.prebuilt import create_react_agent
 from langchain_openai import ChatOpenAI
 from langchain.schema import HumanMessage, AIMessage
 from langgraph.checkpoint.memory import MemorySaver
+from app.services.conversation import ConversationService
 from app.services.tools.invoice import create_invoice
 from app.services.memory import MemoryService
 from langchain_google_genai import ChatGoogleGenerativeAI
+
+from app.services.user import UserService
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -21,10 +24,14 @@ class AIService:
     and create invoices.
     """
     
-    def __init__(self, memory_service: MemoryService = None):
+    def __init__(self, memory_service: MemoryService = None, conversation_service: ConversationService = None, user_service: UserService = None):
         # Get OpenAI API key from environment variables
         self.openai_api_key = os.getenv("OPENAI_API_KEY")
         self.gemini_api_key = os.getenv("GEMINI_API_KEY")
+        
+        self.user_service = user_service
+        self.conversation_service = conversation_service
+        
         if not self.openai_api_key:
             raise ValueError("OPENAI_API_KEY environment variable is not set")
         logger.info(f"OpenAI API Key loaded (first 8 chars): {self.openai_api_key[:8]}...")
@@ -79,7 +86,7 @@ class AIService:
             debug=False
         )
     
-    async def process_text(self, text: str, thread_id: str = None) -> Dict[str, Any]:
+    async def process_text(self, text: str, from_phone_number: str) -> Dict[str, Any]:
         """
         Process text using the agent to extract invoice information and take actions.
         
@@ -90,12 +97,18 @@ class AIService:
         Returns:
             The agent's response with extracted information
         """
-        # Create a unique thread ID if none provided
-        if thread_id is None:
-            thread_id = f"thread_{datetime.now().strftime('%Y%m%d%H%M%S')}"
-            
+
+        # Get the user id from the phone number
+        user = self.user_service.get_user_by_phone_number(from_phone_number)
+        if not user:
+            raise ValueError("User not found")
+        user_id = user.id
+
+        # Get the current conversation
+        conversation = self.conversation_service.get_current_conversation(user_id)
+
         # Set up configuration with thread ID for memory
-        config = {"configurable": {"thread_id": thread_id}}
+        config = {"configurable": {"thread_id": conversation.thread_id}}
 
         # Process with the agent
         result = self.agent_executor.invoke(
@@ -105,8 +118,11 @@ class AIService:
         
         # Extract the response from the agent result
         processed_result = self._extract_agent_response(result)
-        processed_result["thread_id"] = thread_id
-        
+        processed_result["thread_id"] = conversation.thread_id
+
+        # Update the last message at for the conversation
+        self.conversation_service.update_last_message_at(conversation.id)
+
         return processed_result
     
     async def continue_conversation(self, text: str, thread_id: str) -> Dict[str, Any]:

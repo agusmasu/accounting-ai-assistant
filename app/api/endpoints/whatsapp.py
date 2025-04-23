@@ -72,13 +72,9 @@ async def whatsapp_webhook(
             # Get the sender's phone number and message content
             sender_phone = whatsapp_service.get_sender_phone(data)
             message_text = whatsapp_service.get_text_content(data)
-            
-            # Get the thread ID for this user
-            thread_id = whatsapp_service.get_thread_id(sender_phone)
-            logger.info(f"Thread ID for conversation: {thread_id}")
-
+    
             # Process the message with the AI agent
-            response = await ai_service.process_text(message_text, thread_id)
+            response = await ai_service.process_text(message_text, sender_phone)
             
             # Send the AI response back to WhatsApp
             await whatsapp_service.send_message(sender_phone, response["response"])

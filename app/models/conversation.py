@@ -9,3 +9,4 @@ class Conversation(SQLModel, table=True):
     user_id: str | None = Field(default=None)
     thread_id: str | None = Field(default=None)
     last_message_at: datetime | None = Field(default=datetime.now())
+    active: bool = Field(default=False, nullable=False)

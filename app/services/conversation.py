@@ -13,9 +13,13 @@ class ConversationService:
         self.db_session = db_session
 
     def create_conversation(self, user_id: str) -> Conversation:
+        # Set all conversations for the user to inactive
+        statement = update(Conversation).where(Conversation.user_id == user_id).values(active=False)
+        self.db_session.exec(statement)
+        self.db_session.commit()
         # Create a thread id , with the user id and the current datetime:
         thread_id = f"{user_id}-{datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}"
-        conversation = Conversation(user_id=user_id, thread_id=thread_id)
+        conversation = Conversation(user_id=user_id, thread_id=thread_id, active=True)
         self.db_session.add(conversation)
         self.db_session.commit()
         return conversation
@@ -32,7 +36,7 @@ class ConversationService:
 
     def get_current_conversation(self, user_id: str) -> Conversation:
         # Get the most recent conversation for the user
-        statement = select(Conversation).where(Conversation.user_id == user_id).order_by(Conversation.last_message_at.desc())
+        statement = select(Conversation).where(Conversation.user_id == user_id, Conversation.active == True).order_by(Conversation.last_message_at.desc())
         conversation = self.db_session.exec(statement).first()
         if conversation is None:
             logger.info(f"No conversation found for user {user_id}, creating new conversation")

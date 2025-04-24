@@ -2,9 +2,23 @@ from langchain_core.tools import tool
 
 from app.models.invoice import InvoiceInputData
 from app.services.tusfacturas import TusFacturasService
+import logging
+import asyncio
 
-@tool
-async def create_invoice(invoice_data: InvoiceInputData):
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
+
+@tool(name_or_callable="create_invoice_test", description="Create an invoice using the TusFacturas API")
+def create_invoice_test():
+    """Create an invoice using the TusFacturas API
+    
+    Returns:
+        dict: The invoice data
+    """
+    return "Invoice created wirh id 1"
+
+@tool(name_or_callable="create_invoice", description="Create an invoice using the TusFacturas API")
+def create_invoice(invoice_data: InvoiceInputData):
     """Create an invoice using the TusFacturas API
     
     Args:
@@ -15,10 +29,8 @@ async def create_invoice(invoice_data: InvoiceInputData):
     """
     
     # Print the invoice data
-    print("Creating invoice with the following data:")
-    print(invoice_data)
+    logger.info(f"Creating invoice with the following data: {invoice_data}")
 
     tusfacturas_service = TusFacturasService()
-    return await tusfacturas_service.generate_invoice(invoice_data)
-
+    return asyncio.run(tusfacturas_service.generate_invoice(invoice_data))
 

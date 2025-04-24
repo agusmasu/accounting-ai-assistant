@@ -5,6 +5,7 @@ import aiohttp
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from app.models.invoice import InvoiceInputData, InvoiceItem
+import requests
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)

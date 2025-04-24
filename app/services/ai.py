@@ -8,7 +8,7 @@ from langchain_openai import ChatOpenAI
 from langchain.schema import HumanMessage, AIMessage
 from langgraph.checkpoint.memory import MemorySaver
 from app.services.conversation import ConversationService
-from app.services.tools.invoice import create_invoice
+from app.services.tools.invoice import create_invoice, create_invoice_test
 from app.services.memory import MemoryService
 from langchain_google_genai import ChatGoogleGenerativeAI
 
@@ -55,6 +55,7 @@ class AIService:
 
         # Set up tools
         self.tools = [create_invoice]
+        # self.tools = [create_invoice_test]
         
         # Initialize memory for conversation persistence
         self.memory = self.memory_service.get_checkpointer()
@@ -83,7 +84,7 @@ class AIService:
             self.tools, 
             checkpointer=self.memory,
             prompt=prompt,
-            debug=False
+            debug=True
         )
     
     async def process_text(self, text: str, from_phone_number: str) -> Dict[str, Any]:
@@ -124,7 +125,7 @@ class AIService:
         self.conversation_service.update_last_message_at(conversation.id)
 
         return processed_result
-    
+
     async def continue_conversation(self, text: str, thread_id: str) -> Dict[str, Any]:
         """
         Continue an existing conversation with the agent.

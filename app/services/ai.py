@@ -1,3 +1,4 @@
+import base64
 import os
 import logging
 from datetime import datetime
@@ -45,6 +46,12 @@ class AIService:
             model="gpt-4o-mini",
             temperature=0,
             openai_api_key=self.openai_api_key
+        )
+
+        self.voice_llm = ChatOpenAI(
+            model="gpt-4o-mini-transcribe",
+            openai_api_key=self.openai_api_key,
+            temperature=0
         )
 
         # self.llm = ChatGoogleGenerativeAI(
@@ -199,9 +206,37 @@ class AIService:
         
         return processed_result 
     
-    def process_voice(self, voice: bytes, thread_id: str = None) -> Dict[str, Any]:
+    def process_voice(self, voice: bytes, content_type: str, sender_phone: str) -> Dict[str, Any]:
         """
         Process voice using the agent to extract invoice information and take actions.
         """
-        # Convert voice to text
+        # Convert voice to text, using 4o-transcribe-mini
+        audio_file = open(voice, "rb")
         
+        # Conveert binary data to base64:
+        audio_base64: str = base64.b64encode(audio_file.read()).decode("utf-8")
+
+        logger.info("Audio file encoded to base64")
+
+        whatsapp_audio_format: str = content_type.split("/")[1]
+
+        # Define the input message with audio
+        messages = [
+            (
+                "human",
+                [
+                    {"type": "text", "text": "Transcribe the following customer audio:"},
+                    {"type": "input_audio", "input_audio": {"data": audio_base64, "format": whatsapp_audio_format}},
+                ],
+            )
+        ]
+
+        logger.info("Sending audio to LLM")
+
+        # Process the voice message
+        result = self.voice_llm.invoke(messages)
+        response_text = result.content
+
+        logger.info("Processing text response with the text agent")
+
+        return self.process_text(text=response_text, from_phone_number=sender_phone)

@@ -37,31 +37,24 @@ async def whatsapp_webhook(
         # Get message data
         data = await request.json()
         logger.info(f"Message data: {data}")
+        
+        # Get the sender's phone number and message content
+        sender_phone: str = whatsapp_service.get_sender_phone(data)
+        message_text: str = whatsapp_service.get_text_content(data)
+    
+
         # Process voice message
         if whatsapp_service.is_voice_message(data):
+            
             # Download voice message
             voice_url = whatsapp_service.get_voice_url(data)
-            voice_file = await whatsapp_service.download_voice(voice_url)
+            voice_file, content_type = await whatsapp_service.download_voice(voice_url)
             
             # Process voice with AI
-            invoice_data = await ai_service.process_voice(voice_file)
+            invoice_data = await ai_service.process_voice(voice_file, content_type, sender_phone)
             
-            # Generate invoice using TusFacturasApp
-            invoice = InvoiceInputData(**invoice_data)
-            invoice_response = await tusfacturas_service.generate_invoice(invoice)
-            
-            # Send confirmation message with PDF link
-            await whatsapp_service.send_message(
-                data["entry"][0]["changes"][0]["value"]["messages"][0]["from"],
-                f"Invoice generated successfully!\nInvoice number: {invoice_response['invoice_number']}"
-            )
-            
-            # Send the PDF document
-            await whatsapp_service.send_document(
-                data["entry"][0]["changes"][0]["value"]["messages"][0]["from"],
-                invoice_response["pdf_url"],
-                f"Invoice #{invoice_response['invoice_number']}"
-            )
+            # Send the AI response back to WhatsApp
+            await whatsapp_service.send_message(sender_phone, invoice_data["response"])
             
             return {"status": "success"}
         
@@ -69,10 +62,6 @@ async def whatsapp_webhook(
         elif whatsapp_service.is_text_message(data):
             logger.info("Processing text message")
 
-            # Get the sender's phone number and message content
-            sender_phone = whatsapp_service.get_sender_phone(data)
-            message_text = whatsapp_service.get_text_content(data)
-    
             # Process the message with the AI agent
             response = await ai_service.process_text(message_text, sender_phone)
             

@@ -5,7 +5,7 @@ import hashlib
 from fastapi import Request
 import aiohttp
 import json
-from typing import Dict, Optional
+from typing import Dict, Optional, Tuple
 import logging
 from app.services.memory import MemoryService
 
@@ -81,6 +81,7 @@ class WhatsAppService:
     
     def get_voice_url(self, data: dict) -> str:
         """Extract the voice message URL from the webhook data"""
+        logger.info(f"Extracting voice message URL from webhook data")
         message = data["entry"][0]["changes"][0]["value"]["messages"][0]
         return message["audio"]["id"]
     
@@ -89,15 +90,19 @@ class WhatsAppService:
         message = data["entry"][0]["changes"][0]["value"]["messages"][0]
         return message["image"]["id"]
     
-    async def download_voice(self, voice_id: str) -> bytes:
+    async def download_voice(self, voice_id: str) -> Tuple[bytes, str]:
         """Download the voice message from WhatsApp"""
+        logger.info(f"Downloading voice message from WhatsApp")
         async with aiohttp.ClientSession() as session:
             url = f"{self.base_url}/{voice_id}"
             headers = {"Authorization": f"Bearer {self.token}"}
             async with session.get(url, headers=headers) as response:
                 if response.status != 200:
                     raise Exception("Failed to download voice message")
-                return await response.read()
+                content_type = response.headers.get('Content-Type')
+                payload = await response.read()
+                logger.info(f"Voice message downloaded successfully, with content type: {content_type}")
+                return payload, content_type
     
     async def download_image(self, image_id: str) -> bytes:
         """Download the image from WhatsApp"""

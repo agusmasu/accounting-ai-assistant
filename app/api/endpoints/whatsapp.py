@@ -90,8 +90,8 @@ async def whatsapp_webhook(
             
         return {"status": "ignored", "message": "Not a supported message type"}
         
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    # except Exception as e:
+    #     raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("")

@@ -40,7 +40,6 @@ async def whatsapp_webhook(
         
         # Get the sender's phone number and message content
         sender_phone: str = whatsapp_service.get_sender_phone(data)
-        message_text: str = whatsapp_service.get_text_content(data)
     
 
         # Process voice message
@@ -61,6 +60,7 @@ async def whatsapp_webhook(
         # Process text message
         elif whatsapp_service.is_text_message(data):
             logger.info("Processing text message")
+            message_text: str = whatsapp_service.get_text_content(data)
 
             # Process the message with the AI agent
             response = await ai_service.process_text(message_text, sender_phone)

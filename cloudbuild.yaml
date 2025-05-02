@@ -1,17 +1,11 @@
 steps:
-  - name: gcr.io/k8s-skaffold/pack
-    env:
-      - GOOGLE_ENTRYPOINT=$_ENTRYPOINT
+  - name: gcr.io/cloud-builders/docker
     args:
       - build
-      - >-
-        $_AR_HOSTNAME/$_AR_PROJECT_ID/$_AR_REPOSITORY/$REPO_NAME/$_SERVICE_NAME:$COMMIT_SHA
-      - '--builder=gcr.io/buildpacks/builder:v1'
-      - '--network=cloudbuild'
-      - '--path=.'
-      - '--env=GOOGLE_ENTRYPOINT'
-    id: Buildpack
-    entrypoint: pack
+      - -t
+      - $_AR_HOSTNAME/$_AR_PROJECT_ID/$_AR_REPOSITORY/$REPO_NAME/$_SERVICE_NAME:$COMMIT_SHA
+      - .
+    id: Build
   - name: gcr.io/cloud-builders/docker
     args:
       - push
@@ -49,7 +43,6 @@ substitutions:
   _TRIGGER_ID: 4c33491b-9e39-4098-a0c9-b831c0369b30
   _SERVICE_NAME: accounting-ai-assistant-chat
   _AR_REPOSITORY: cloud-run-source-deploy
-  _ENTRYPOINT: uvicorn app.main:app --host=0.0.0.0 --port=${PORT:-8080}
   _DEPLOY_REGION: us-central1
   _AR_PROJECT_ID: voicein-456423
 tags:

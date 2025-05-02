@@ -2,7 +2,7 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install system dependencies for psycopg (PostgreSQL client)
+# Install system dependencies for psycopg (PostgreSQL client) and libsndfile
 RUN apt-get update && apt-get install -y \
     libpq-dev \
     gcc \
@@ -15,6 +15,14 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the application code
 COPY . .
+
+# Set environment variables
+ENV POSTGRES_HOST=ep-delicate-moon-a4dnrer6-pooler.us-east-1.aws.neon.tech
+ENV POSTGRES_PORT=5432
+ENV POSTGRES_DB=neondb
+ENV POSTGRES_USER=neondb_owner
+ENV POSTGRES_CONNECT_OPTIONS=endpoint=ep-delicate-moon-a4dnrer6
+ENV ADMIN_API_KEY=admin
 
 # Expose the port for the application
 EXPOSE 8080

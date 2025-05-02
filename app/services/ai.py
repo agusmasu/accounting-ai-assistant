@@ -210,11 +210,9 @@ class AIService:
         """
         Process voice using the agent to extract invoice information and take actions.
         """
-        # Convert voice to text, using 4o-transcribe-mini
-        audio_file = open(voice, "rb")
         
         # Conveert binary data to base64:
-        audio_base64: str = base64.b64encode(audio_file.read()).decode("utf-8")
+        audio_base64: str = base64.b64encode(voice).decode("utf-8")
 
         logger.info("Audio file encoded to base64")
 

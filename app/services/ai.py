@@ -212,7 +212,7 @@ class AIService:
         
         return processed_result 
     
-    def process_voice(self, voice: bytes, content_type: str, sender_phone: str) -> Dict[str, Any]:
+    async def process_voice(self, voice: bytes, content_type: str, sender_phone: str) -> Dict[str, Any]:
         """
         Process voice using the agent to extract invoice information and take actions.
         """
@@ -234,17 +234,16 @@ class AIService:
 
         logger.info(f"Audio successfully converted to mp3 format")
         
-        # Conveert binary data to base64:
-        # audio_base64: str = base64.b64encode(voice).decode("utf-8")
-
-        # logger.info("Audio file encoded to base64")
+        # Create a file-like object with a name attribute for the OpenAI API
+        mp3_file = io.BytesIO(voice)
+        mp3_file.name = "audio.mp3"  # The name with extension is important
 
         transcription = self.openai_client.audio.transcriptions.create(
             model="gpt-4o-mini-transcribe", 
-            file=voice
+            file=mp3_file
         )
 
         text = transcription.text
         logger.info("Processing text response with the text agent")
 
-        return self.process_text(text=text, from_phone_number=sender_phone)
+        return await self.process_text(text=text, from_phone_number=sender_phone)

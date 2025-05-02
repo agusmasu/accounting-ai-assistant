@@ -53,7 +53,7 @@ async def whatsapp_webhook(
             response = await ai_service.process_voice(voice_file, content_type, sender_phone)
             
             # Send the AI response back to WhatsApp
-            await whatsapp_service.send_message(sender_phone, response)
+            await whatsapp_service.send_message(sender_phone, response['response'])
             
             return {"status": "success"}
         

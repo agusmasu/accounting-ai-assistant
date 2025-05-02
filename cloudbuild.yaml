@@ -25,7 +25,7 @@ steps:
         --labels=managed-by=gcp-cloud-build-deploy-cloud-run,commit-sha=$COMMIT_SHA,gcb-build-id=$BUILD_ID,gcb-trigger-id=$_TRIGGER_ID
       - '--region=$_DEPLOY_REGION'
       - '--update-secrets=OPENAI_API_KEY=openai-api-key:latest,TUSFACTURAS_API_KEY=tusfacturas-api-key:latest,TUSFACTURAS_API_TOKEN=tusfacturas-api-token:latest,TUSFACTURAS_USER_TOKEN=tusfacturas-user-token:latest,WHATSAPP_ACCESS_TOKEN=whatsapp-access-token:latest,POSTGRES_PASSWORD=postgres-password:latest,GEMINI_API_KEY=gemini-api-key:latest'
-      - '--set-env-vars=POSTGRES_HOST=ep-delicate-moon-a4dnrer6-pooler.us-east-1.aws.neon.tech,POSTGRES_PORT=5432,POSTGRES_DB=neondb,POSTGRES_USER=neondb_owner,POSTGRES_CONNECT_OPTIONS=endpoint=ep-delicate-moon-a4dnrer6,ADMIN_API_KEY=admin'
+      - '--set-env-vars=POSTGRES_HOST=ep-delicate-moon-a4dnrer6-pooler.us-east-1.aws.neon.tech,POSTGRES_PORT=5432,POSTGRES_DB=neondb,POSTGRES_USER=neondb_owner,POSTGRES_CONNECT_OPTIONS=endpoint=ep-delicate-moon-a4dnrer6-pooler,ADMIN_API_KEY=admin'
       - '--network=default'
       - '--subnet=default'
       - '--quiet'

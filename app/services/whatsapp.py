@@ -99,10 +99,16 @@ class WhatsAppService:
             async with session.get(url, headers=headers) as response:
                 if response.status != 200:
                     raise Exception("Failed to download voice message")
-                content_type = response.headers.get('Content-Type')
-                payload = await response.read()
-                logger.info(f"Voice message downloaded successfully, with content type: {content_type}")
-                return payload, content_type
+                # The response is a json with the url of the voice message, as "url", as well as the content type, as "mime_type":
+                response_json = await response.json()
+                url = response_json["url"]
+                content_type = response_json["mime_type"]
+                
+                # Download the voice message from the url:
+                async with session.get(url, headers=headers) as response:
+                    if response.status != 200:
+                        raise Exception("Failed to download voice message")
+                    return await response.read(), content_type
     
     async def download_image(self, image_id: str) -> bytes:
         """Download the image from WhatsApp"""

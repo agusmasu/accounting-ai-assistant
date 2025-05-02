@@ -14,6 +14,7 @@ from app.services.memory import MemoryService
 from langchain_google_genai import ChatGoogleGenerativeAI
 
 from app.services.user import UserService
+from openai import OpenAI
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -46,6 +47,10 @@ class AIService:
             model="gpt-4o-mini",
             temperature=0,
             openai_api_key=self.openai_api_key
+        )
+
+        self.openai_client = OpenAI(
+            api_key=self.openai_api_key
         )
 
         self.voice_llm = ChatOpenAI(
@@ -212,29 +217,16 @@ class AIService:
         """
         
         # Conveert binary data to base64:
-        audio_base64: str = base64.b64encode(voice).decode("utf-8")
+        # audio_base64: str = base64.b64encode(voice).decode("utf-8")
 
         logger.info("Audio file encoded to base64")
 
-        whatsapp_audio_format: str = content_type.split("/")[1]
+        transcription = self.openai_client.audio.transcriptions.create(
+            model="gpt-4o-mini-transcribe", 
+            file=voice
+        )
 
-        # Define the input message with audio
-        messages = [
-            (
-                "human",
-                [
-                    {"type": "text", "text": "Transcribe the following customer audio:"},
-                    {"type": "input_audio", "input_audio": {"data": audio_base64, "format": whatsapp_audio_format}},
-                ],
-            )
-        ]
-
-        logger.info("Sending audio to LLM")
-
-        # Process the voice message
-        result = self.voice_llm.invoke(messages)
-        response_text = result.content
-
+        text = transcription.text
         logger.info("Processing text response with the text agent")
 
-        return self.process_text(text=response_text, from_phone_number=sender_phone)
+        return self.process_text(text=text, from_phone_number=sender_phone)

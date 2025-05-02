@@ -3,7 +3,8 @@ import os
 import logging
 from datetime import datetime
 from typing import List, Dict, Any
-
+from pydub import AudioSegment
+import io
 from langgraph.prebuilt import create_react_agent
 from langchain_openai import ChatOpenAI
 from langchain.schema import HumanMessage, AIMessage
@@ -215,11 +216,28 @@ class AIService:
         """
         Process voice using the agent to extract invoice information and take actions.
         """
+        # Convert audio to mp3 format using pydub
+
+        logger.info(f"Converting audio file from {content_type} to mp3")
+        
+        file_type = content_type.split('/')[-1]
+        logger.info(f"Received a file type: {file_type}")
+
+        # Load audio from bytes into pydub
+        audio = AudioSegment.from_file(io.BytesIO(voice), format=file_type)
+        
+        # Export as mp3 to bytes buffer
+        mp3_buffer = io.BytesIO()
+        audio.export(mp3_buffer, format="mp3")
+        mp3_buffer.seek(0)
+        voice = mp3_buffer.read()
+
+        logger.info(f"Audio successfully converted to mp3 format")
         
         # Conveert binary data to base64:
         # audio_base64: str = base64.b64encode(voice).decode("utf-8")
 
-        logger.info("Audio file encoded to base64")
+        # logger.info("Audio file encoded to base64")
 
         transcription = self.openai_client.audio.transcriptions.create(
             model="gpt-4o-mini-transcribe", 

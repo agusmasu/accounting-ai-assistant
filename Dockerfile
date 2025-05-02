@@ -22,7 +22,7 @@ ENV POSTGRES_HOST=ep-delicate-moon-a4dnrer6-pooler.us-east-1.aws.neon.tech
 ENV POSTGRES_PORT=5432
 ENV POSTGRES_DB=neondb
 ENV POSTGRES_USER=neondb_owner
-ENV POSTGRES_CONNECT_OPTIONS=endpoint=ep-delicate-moon-a4dnrer6
+ENV POSTGRES_CONNECT_OPTIONS=endpoint=ep-delicate-moon-a4dnrer6-pooler
 ENV ADMIN_API_KEY=admin
 
 # Expose the port for the application

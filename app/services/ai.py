@@ -3,7 +3,7 @@ import os
 import logging
 from datetime import datetime
 from typing import List, Dict, Any
-from pydub import AudioSegment
+import soundfile as sf
 import io
 from langgraph.prebuilt import create_react_agent
 from langchain_openai import ChatOpenAI
@@ -216,28 +216,34 @@ class AIService:
         """
         Process voice using the agent to extract invoice information and take actions.
         """
-        # Convert audio to mp3 format using pydub
+        # Convert audio to mp3 format using soundfile
 
-        logger.info(f"Converting audio file from {content_type} to mp3")
+        logger.info(f"Converting audio file from {content_type} to mp3 format")
         
         file_type = content_type.split('/')[-1]
         logger.info(f"Received a file type: {file_type}")
 
-        # Load audio from bytes into pydub
-        audio = AudioSegment.from_file(io.BytesIO(voice), format=file_type)
+        # Create input buffer from bytes
+        input_buffer = io.BytesIO(voice)
+        input_buffer.name = f"input.{file_type}"  # SoundFile needs a name to determine format
         
-        # Export as mp3 to bytes buffer
-        mp3_buffer = io.BytesIO()
-        audio.export(mp3_buffer, format="mp3")
-        mp3_buffer.seek(0)
-        voice = mp3_buffer.read()
-
-        logger.info(f"Audio successfully converted to mp3 format")
-        
-        # Conveert binary data to base64:
-        # audio_base64: str = base64.b64encode(voice).decode("utf-8")
-
-        # logger.info("Audio file encoded to base64")
+        try:
+            # Read audio data using soundfile
+            data, samplerate = sf.read(input_buffer)
+            
+            # Create output buffer for mp3
+            output_buffer = io.BytesIO()
+            output_buffer.name = "output.mp3"
+            
+            # Write data as mp3
+            sf.write(output_buffer, data, samplerate, format="mp3")
+            output_buffer.seek(0)
+            voice = output_buffer.read()
+            
+            logger.info(f"Audio successfully converted to mp3 format")
+        except Exception as e:
+            logger.error(f"Error converting audio: {str(e)}")
+            raise
 
         transcription = self.openai_client.audio.transcriptions.create(
             model="gpt-4o-mini-transcribe", 

@@ -2,10 +2,11 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install system dependencies for psycopg (PostgreSQL client) and libsndfile
+# Install system dependencies for psycopg (PostgreSQL client), libsndfile, and ffmpeg
 RUN apt-get update && apt-get install -y \
     libpq-dev \
     gcc \
+    ffmpeg \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 

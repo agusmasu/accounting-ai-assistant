@@ -18,12 +18,13 @@ def create_invoice_test():
     return "Invoice created wirh id 1"
 
 @tool(name_or_callable="create_invoice", description="Create an invoice using the TusFacturas API")
-def create_invoice(invoice_data: InvoiceInputData):
+def create_invoice(invoice_data: InvoiceInputData, user_id: str):
     """Create an invoice using the TusFacturas API
     
     Args:
         invoice_data (Invoice): The invoice data to create
-        
+        user_id (str): The user id of the user who is creating the invoice
+
     Returns:
         dict: The invoice data
     """
@@ -32,5 +33,5 @@ def create_invoice(invoice_data: InvoiceInputData):
     logger.info(f"Creating invoice with the following data: {invoice_data}")
 
     tusfacturas_service = TusFacturasService()
-    return asyncio.run(tusfacturas_service.generate_invoice(invoice_data))
+    return asyncio.run(tusfacturas_service.generate_invoice(invoice_data, user_id))
 

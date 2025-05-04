@@ -1,18 +1,21 @@
 import os
 import logging
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 import aiohttp
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from app.models.invoice import InvoiceInputData, InvoiceItem
 import requests
 
+from app.models.user import User
+from app.services.user import UserService
+
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class TusFacturasService:
-    def __init__(self):
+    def __init__(self, user_service: UserService):
         """Initialize TusFacturasApp service with API credentials"""
         load_dotenv()
         self.api_url = "https://www.tusfacturas.app/app/api/v2/facturacion"
@@ -22,6 +25,8 @@ class TusFacturasService:
 
         if not all([self.api_key, self.api_token, self.user_token]):
             raise ValueError("Missing required TusFacturasApp credentials in environment variables")
+
+        self.user_service = user_service
 
     def _prepare_items(self, items: List[InvoiceItem]) -> List[Dict[str, Any]]:
         """Prepare invoice items in TusFacturasApp format"""
@@ -42,15 +47,22 @@ class TusFacturasService:
             formatted_items.append(formatted_item)
         return formatted_items
 
-    async def generate_invoice(self, invoice: InvoiceInputData) -> Dict[str, Any]:
+    async def generate_invoice(self, invoice: InvoiceInputData, user_id: str) -> Dict[str, Any]:
         """Generate an invoice using TusFacturasApp API"""
         try:
+            # Get the user
+            user: Optional[User] = self.user_service.get_user_by_id(user_id)
+            if not user:
+                raise Exception("User not found")
+
             # Calculate expiration date (30 days from invoice date)
             expiration_date = invoice.invoice_date + timedelta(days=30)
 
+            logger.info(f"Creating invoice for user: {user.name}")
+
             # Prepare invoice data according to TusFacturasApp format
             invoice_data = {
-                "usertoken": self.user_token,
+                "usertoken": user.user_token,
                 "apikey": self.api_key,
                 "apitoken": self.api_token,
                 "cliente": {

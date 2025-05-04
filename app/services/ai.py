@@ -2,13 +2,14 @@ import base64
 import os
 import logging
 from datetime import datetime
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from pydub import AudioSegment
 import io
 from langgraph.prebuilt import create_react_agent
 from langchain_openai import ChatOpenAI
 from langchain.schema import HumanMessage, AIMessage
 from langgraph.checkpoint.memory import MemorySaver
+from app.models.user import User
 from app.services.conversation import ConversationService
 from app.services.tools.invoice import create_invoice, create_invoice_test
 from app.services.memory import MemoryService
@@ -75,20 +76,30 @@ class AIService:
         logger.info("Using PostgreSQL checkpointer from MemoryService")
 
         prompt = """
-            You are a helpful accountant assistant that can create invoices.
-            You can also help with other accounting tasks.
-            You can use any of the tools provided to you to help the user.
+            You are a helpful accountant assistant specialized in creating invoices and managing accounting tasks.
 
-            Please consider the following rules for creating an invoice:
-            - The invoice must be created in the format of the tool provided.
-            - If the user decides to not specify a client, you must use the following values:
+            ## Your Role
+            - You help users create invoices and answer accounting questions
+            - You communicate exclusively through WhatsApp
+            - You provide concise, direct responses (max 3-4 sentences per message)
+            - You break complex information into multiple short messages when needed
+
+            ## Invoice Creation Rules
+            When creating an invoice:
+            - Follow exactly the format required by the tool
+            - For unspecified clients, use these default values:
                 - documento_tipo: OTRO
                 - documento_nro: 0
                 - razon_social: "Sin Especificar"
                 - domicilio: "Sin Especificar"
-                - provincia: 0    
+                - provincia: 0
 
-            The message you return needs to follow the formatting of a WhatsApp message, as we're using the WhatsApp API to send messages to the user.
+            ## Communication Style
+            - Keep messages brief and to the point
+            - Use simple language
+            - Ask clarifying questions when information is missing
+            - Confirm actions before executing them
+            - Avoid lengthy explanations
         """
 
         # Create the agent
@@ -113,7 +124,7 @@ class AIService:
         """
 
         # Get the user id from the phone number
-        user = self.user_service.get_user_by_phone_number(from_phone_number)
+        user: Optional[User] = self.user_service.get_user_by_phone_number(from_phone_number)
         if not user:
             raise ValueError("User not found")
         user_id = user.id
@@ -137,32 +148,6 @@ class AIService:
         # Update the last message at for the conversation
         self.conversation_service.update_last_message_at(conversation.id)
 
-        return processed_result
-
-    async def continue_conversation(self, text: str, thread_id: str) -> Dict[str, Any]:
-        """
-        Continue an existing conversation with the agent.
-        
-        Args:
-            text: The new text input from the user
-            thread_id: The existing conversation thread ID
-            
-        Returns:
-            The agent's response
-        """
-        # Use the existing thread ID for conversation continuity
-        config = {"configurable": {"thread_id": thread_id}}
-        
-        # Process with the agent
-        result = await self.agent_executor.ainvoke(
-            {"messages": [HumanMessage(content=text)]}, 
-            config
-        )
-        
-        # Extract the response from the agent result
-        processed_result = self._extract_agent_response(result)
-        processed_result["thread_id"] = thread_id
-        
         return processed_result
     
     def _extract_agent_response(self, agent_result: Dict[str, Any]) -> Dict[str, Any]:

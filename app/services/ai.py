@@ -100,6 +100,12 @@ class AIService:
             - Ask clarifying questions when information is missing
             - Confirm actions before executing them
             - Avoid lengthy explanations
+        
+            ## User Information
+            - The user's name is {user_name}
+            - The user's phone number is {user_phone_number}
+            - The user's email is {user_email}
+        
         """
 
         # Create the agent
@@ -137,7 +143,12 @@ class AIService:
 
         # Process with the agent
         result = self.agent_executor.invoke(
-            {"messages": [HumanMessage(content=text)]},
+            {
+                "messages": [HumanMessage(content=text)],
+                "user_name": user.name,
+                "user_phone_number": user.phone_number,
+                "user_email": user.email
+            },
             config
         )
         

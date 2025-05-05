@@ -37,14 +37,13 @@ async def whatsapp_webhook(
         # Get message data
         data = await request.json()
         logger.info(f"Message data: {data}")
-        
-        # Get the sender's phone number and message content
-        sender_phone: str = whatsapp_service.get_sender_phone(data)
-    
 
         # Process voice message
         if whatsapp_service.is_voice_message(data):
             
+            # Get the sender's phone number and message content
+            sender_phone: str = whatsapp_service.get_sender_phone(data)
+    
             # Download voice message
             voice_url = whatsapp_service.get_voice_url(data)
             voice_file, content_type = await whatsapp_service.download_voice(voice_url)
@@ -59,6 +58,9 @@ async def whatsapp_webhook(
         
         # Process text message
         elif whatsapp_service.is_text_message(data):
+            # Get the sender's phone number and message content
+            sender_phone: str = whatsapp_service.get_sender_phone(data)
+            
             logger.info("Processing text message")
             message_text: str = whatsapp_service.get_text_content(data)
 

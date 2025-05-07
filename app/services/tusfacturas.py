@@ -16,7 +16,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class TusFacturasService:
-    def __init__(self, user_service: UserService):
+    def __init__(self, user_service: UserService = None):
         """Initialize TusFacturasApp service with API credentials"""
         load_dotenv()
         self.api_url = "https://www.tusfacturas.app/app/api/v2/facturacion"
@@ -48,7 +48,7 @@ class TusFacturasService:
             formatted_items.append(formatted_item)
         return formatted_items
 
-    async def generate_invoice(self, invoice: InvoiceInputData, user_id: Optional[str] = None) -> Dict[str, Any]:
+    async def generate_invoice(self, invoice: InvoiceInputData, user: User = None) -> Dict[str, Any]:
         """Generate an invoice using TusFacturasApp API
         
         Args:
@@ -59,16 +59,6 @@ class TusFacturasService:
             The generated invoice data
         """
         try:
-            # Get the user (either from user_id parameter or from context)
-            user: Optional[User] = None
-            
-            if user_id:
-                # If user_id is provided, use it
-                user = self.user_service.get_user_by_id(user_id)
-            else:
-                # Otherwise try to get from context
-                user = ContextService.get_current_user()
-                
             if not user:
                 raise Exception("User not found - neither provided as parameter nor available in context")
 

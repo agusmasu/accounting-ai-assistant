@@ -11,11 +11,11 @@ from langchain.schema import HumanMessage, AIMessage
 from langgraph.checkpoint.memory import MemorySaver
 from app.models.user import User
 from app.services.conversation import ConversationService
-from app.services.tools.invoice import InvoiceToolsService
 from app.services.memory import MemoryService
 from langchain_google_genai import ChatGoogleGenerativeAI
 from app.services.context import ContextService
 
+from app.services.tools.invoice import create_invoice
 from app.services.tusfacturas import TusFacturasService
 from app.services.user import UserService
 from openai import OpenAI
@@ -72,8 +72,7 @@ class AIService:
         # Set up tools
 
         tusfacturas_service = TusFacturasService(self.user_service)
-        self.invoice_tools_service = InvoiceToolsService(tusfacturas_service)
-        self.tools = [self.invoice_tools_service.create_invoice]
+        self.tools = [create_invoice]
         # self.tools = [create_invoice_test]
         
         # Initialize memory for conversation persistence

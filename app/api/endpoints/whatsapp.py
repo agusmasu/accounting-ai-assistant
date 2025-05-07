@@ -5,6 +5,7 @@ from app.api.deps import get_whatsapp_service, get_ai_service, get_tusfacturas_s
 from app.services.whatsapp import WhatsAppService
 from app.services.ai import AIService
 from app.services.tusfacturas import TusFacturasService
+from app.services.context import ContextService
 from app.models.invoice import InvoiceInputData
 
 router = APIRouter(prefix="/webhook/whatsapp", tags=["whatsapp"])
@@ -40,10 +41,19 @@ async def whatsapp_webhook(
 
         # Process voice message
         if whatsapp_service.is_voice_message(data):
-            
-            # Get the sender's phone number and message content
+            # Get the sender's phone number
             sender_phone: str = whatsapp_service.get_sender_phone(data)
-    
+            
+            # Get and set user in context
+            user = ai_service.user_service.get_user_by_phone_number(sender_phone)
+            if not user:
+                logger.error(f"User not found for phone: {sender_phone}")
+                raise HTTPException(status_code=404, detail="User not found")
+            
+            # Set user in context
+            ContextService.set_current_user(user)
+            logger.info(f"Set user in context for voice message: {user.id}")
+            
             # Download voice message
             voice_url = whatsapp_service.get_voice_url(data)
             voice_file, content_type = await whatsapp_service.download_voice(voice_url)
@@ -60,9 +70,19 @@ async def whatsapp_webhook(
         elif whatsapp_service.is_text_message(data):
             # Get the sender's phone number and message content
             sender_phone: str = whatsapp_service.get_sender_phone(data)
+            message_text: str = whatsapp_service.get_text_content(data)
+            
+            # Get and set user in context
+            user = ai_service.user_service.get_user_by_phone_number(sender_phone)
+            if not user:
+                logger.error(f"User not found for phone: {sender_phone}")
+                raise HTTPException(status_code=404, detail="User not found")
+            
+            # Set user in context
+            ContextService.set_current_user(user)
+            logger.info(f"Set user in context for text message: {user.id}")
             
             logger.info("Processing text message")
-            message_text: str = whatsapp_service.get_text_content(data)
 
             # Process the message with the AI agent
             response = await ai_service.process_text(message_text, sender_phone)
@@ -77,6 +97,9 @@ async def whatsapp_webhook(
             # Get the sender's phone number and image ID
             sender_phone = whatsapp_service.get_sender_phone(data)
             image_id = whatsapp_service.get_image_id(data)
+            
+            # Note: We don't set user context for image messages here
+            # since we don't need it for the current implementation
             
             # Download the image
             image_data = await whatsapp_service.download_image(image_id)

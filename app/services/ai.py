@@ -14,6 +14,7 @@ from app.services.conversation import ConversationService
 from app.services.tools.invoice import InvoiceToolsService
 from app.services.memory import MemoryService
 from langchain_google_genai import ChatGoogleGenerativeAI
+from app.services.context import ContextService
 
 from app.services.tusfacturas import TusFacturasService
 from app.services.user import UserService
@@ -127,20 +128,19 @@ class AIService:
         
         Args:
             text: The text input from the user
-            thread_id: Unique identifier for the conversation thread (for memory)
+            from_phone_number: The phone number of the sender (for user lookup)
             
         Returns:
             The agent's response with extracted information
         """
-
-        # Get the user id from the phone number
-        user: Optional[User] = self.user_service.get_user_by_phone_number(from_phone_number)
+        # Get the user from context
+        user = ContextService.get_current_user()
         if not user:
-            raise ValueError("User not found")
-        user_id = user.id
-
+            logger.error("No user found in context")
+            raise ValueError("User not found in context")
+            
         # Get the current conversation
-        conversation = self.conversation_service.get_current_conversation(user_id)
+        conversation = self.conversation_service.get_current_conversation(user.id)
 
         # Set up configuration with thread ID for memory
         config = {"configurable": {"thread_id": conversation.thread_id}}
@@ -215,9 +215,13 @@ class AIService:
     async def process_voice(self, voice: bytes, content_type: str, sender_phone: str) -> Dict[str, Any]:
         """
         Process voice using the agent to extract invoice information and take actions.
+        
+        Args:
+            voice: The voice message data
+            content_type: The content type of the voice message
+            sender_phone: The phone number of the sender (used for user lookup)
         """
         # Convert audio to mp3 format using pydub
-
         logger.info(f"Converting audio file from {content_type} to mp3")
         
         file_type = content_type.split('/')[-1]

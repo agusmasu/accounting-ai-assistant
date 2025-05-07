@@ -9,6 +9,7 @@ import requests
 
 from app.models.user import User
 from app.services.user import UserService
+from app.services.context import ContextService
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -47,13 +48,29 @@ class TusFacturasService:
             formatted_items.append(formatted_item)
         return formatted_items
 
-    async def generate_invoice(self, invoice: InvoiceInputData, user_id: str) -> Dict[str, Any]:
-        """Generate an invoice using TusFacturasApp API"""
+    async def generate_invoice(self, invoice: InvoiceInputData, user_id: Optional[str] = None) -> Dict[str, Any]:
+        """Generate an invoice using TusFacturasApp API
+        
+        Args:
+            invoice: The invoice data
+            user_id: Optional user ID (will use from context if not provided)
+            
+        Returns:
+            The generated invoice data
+        """
         try:
-            # Get the user
-            user: Optional[User] = self.user_service.get_user_by_id(user_id)
+            # Get the user (either from user_id parameter or from context)
+            user: Optional[User] = None
+            
+            if user_id:
+                # If user_id is provided, use it
+                user = self.user_service.get_user_by_id(user_id)
+            else:
+                # Otherwise try to get from context
+                user = ContextService.get_current_user()
+                
             if not user:
-                raise Exception("User not found")
+                raise Exception("User not found - neither provided as parameter nor available in context")
 
             # Calculate expiration date (30 days from invoice date)
             expiration_date = invoice.invoice_date + timedelta(days=30)

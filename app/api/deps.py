@@ -4,6 +4,7 @@ from app.services.conversation import ConversationService
 from app.services.tusfacturas import TusFacturasService
 from app.services.whatsapp import WhatsAppService
 from app.services.memory import MemoryService
+from app.services.context import ContextService
 from fastapi import Depends, HTTPException, Security
 from fastapi.security import APIKeyHeader
 from app.services.user import UserService
@@ -25,6 +26,10 @@ def get_db_session():
 def get_user_service(db_session: Session = Depends(get_db_session)):
     """Get user service instance."""
     return UserService(db_session=db_session)
+
+def get_context_service():
+    """Get context service instance."""
+    return ContextService()
 
 async def verify_admin_api_key(api_key: str = Security(api_key_header)):
     """Verify admin API key."""

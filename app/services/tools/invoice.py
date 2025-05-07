@@ -14,7 +14,7 @@ class InvoiceToolsService:
         self.tusfacturas_service = tusfacturas_service
 
     @tool(name_or_callable="create_invoice_test", description="Create an invoice using the TusFacturas API")
-    def create_invoice_test():
+    def create_invoice_test(self):
         """Create an invoice using the TusFacturas API
         
         Returns:
@@ -23,7 +23,7 @@ class InvoiceToolsService:
         return "Invoice created wirh id 1"
 
     @tool(name_or_callable="create_invoice", description="Create an invoice using the TusFacturas API")
-    def create_invoice(invoice_data: InvoiceInputData, user_id: str):
+    def create_invoice(self, invoice_data: InvoiceInputData, user_id: str):
         """Create an invoice using the TusFacturas API
         
         Args:
@@ -37,6 +37,5 @@ class InvoiceToolsService:
         # Print the invoice data
         logger.info(f"Creating invoice with the following data: {invoice_data}")
 
-        tusfacturas_service = TusFacturasService()
-        return asyncio.run(tusfacturas_service.generate_invoice(invoice_data, user_id))
+        return asyncio.run(self.tusfacturas_service.generate_invoice(invoice_data, user_id))
 
